@@ -30,4 +30,3 @@ Prioritas: full > charging > low battery > notifikasi.
    `file_contexts` yang sudah ada di folder sepolicy yang sama.
 5. Build & flash seperti biasa.
 
-```
