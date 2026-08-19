@@ -1,0 +1,16 @@
+# init.ledcontrol.rc
+# Service LED POCO F4 GT (ingres) - native, tanpa Magisk.
+#
+# Taruh file ini di:   $(TARGET_COPY_OUT_VENDOR)/etc/init/init.ledcontrol.rc
+# Script-nya ditaruh di: $(TARGET_COPY_OUT_VENDOR)/bin/ledcontrol.sh
+# (lihat device.mk.snippet buat baris PRODUCT_COPY_FILES-nya)
+
+service ledcontrol /vendor/bin/ledcontrol.sh
+    class late_start
+    user root
+    group root system
+    seclabel u:r:led_control:s0
+    disabled
+
+on property:sys.boot_completed=1
+    start ledcontrol
