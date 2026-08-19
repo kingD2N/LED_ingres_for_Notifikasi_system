@@ -30,21 +30,4 @@ Prioritas: full > charging > low battery > notifikasi.
    `file_contexts` yang sudah ada di folder sepolicy yang sama.
 5. Build & flash seperti biasa.
 
-## Status sepolicy
-
-`led_control.te` adalah starting point (lihat komentar di dalam file).
-Belum tentu lengkap tanpa uji di device asli - kalau service nggak
-jalan setelah build, cek:
-```
-su -c 'dmesg | grep "avc: denied"'
-```
-lalu tambahkan `allow led_control ...;` sesuai baris denied yang
-muncul. Iterasi build → flash → cek log → fix, sampai bersih.
-
-## Debug
-
-Log status berjalan real-time di `/data/local/tmp/led_status.txt`
-(overwrite tiap ~2 detik), format:
-```
-HH:MM:SS batt=<status> cap=<persen> cnt=<jumlah notif> scr_off=<0/1> target=<state> state=<state>
 ```
