@@ -1,0 +1,53 @@
+# led_control.te
+# STARTING POINT - belum tentu lengkap. Alur yang diharapkan:
+#   1. Build + flash ROM dengan file ini
+#   2. Kalau ledcontrol nggak jalan/nggak nulis DEBUGLOG, cek:
+#        adb shell dmesg | grep -i avc
+#        adb shell logcat -d | grep -i avc
+#      (atau su -c 'dmesg | grep avc' langsung di device)
+#   3. Tiap baris "avc: denied { xxx } ... scontext=u:r:led_control:s0
+#      tcontext=u:r:XXX:s0 tclass=YYY" artinya perlu tambah:
+#        allow led_control XXX:YYY xxx;
+#   4. Ulangi sampai bersih dari denial.
+#
+# Taruh file ini di folder sepolicy device tree situ (biasanya
+# terdaftar lewat BOARD_SEPOLICY_DIRS / BOARD_VENDOR_SEPOLICY_DIRS
+# di BoardConfig.mk - cek device tree situ, ikutin folder yang
+# sudah ada, misal sepolicy/vendor/).
+
+type led_control, domain;
+type led_control_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(led_control)
+
+# --- akses sysfs LED (aw22xxx) ---
+# "sysfs_leds" adalah label AOSP umum utk /sys/class/leds/*.
+# Kalau device tree situ punya genfscon/label custom sendiri utk
+# aw22xxx_led, ganti type di bawah sesuai itu.
+allow led_control sysfs_leds:dir search;
+allow led_control sysfs_leds:file rw_file_perms;
+
+# --- akses sysfs battery (status & capacity) ---
+allow led_control sysfs_batteryinfo:dir search;
+allow led_control sysfs_batteryinfo:file r_file_perms;
+
+# --- akses /sys/block/*/queue (tweak scheduler bawaan module) ---
+allow led_control sysfs_dm:file rw_file_perms;
+allow led_control block_device:dir search;
+
+# --- jalanin dumpsys (buat notification count & wakefulness) ---
+allow led_control shell_exec:file rx_file_perms;
+allow led_control system_file:file rx_file_perms;
+binder_use(led_control)
+binder_call(led_control, servicemanager)
+binder_call(led_control, system_server)
+allow led_control servicemanager:service_manager find;
+get_prop(led_control, hwservicemanager_prop)
+
+# --- baca boot prop & tulis debug log ---
+get_prop(led_control, boot_status_prop)
+allow led_control shell_data_file:dir rw_dir_perms;
+allow led_control shell_data_file:file create_file_perms;
+
+# --- device_config / service call (tweak process cache bawaan) ---
+set_prop(led_control, device_config_activity_manager_native_boot_prop)
