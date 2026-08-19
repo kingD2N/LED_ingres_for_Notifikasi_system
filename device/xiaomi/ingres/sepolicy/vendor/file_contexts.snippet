@@ -1,0 +1,6 @@
+# Tambahkan baris ini ke file_contexts device tree situ
+# (biasanya device/xiaomi/ingres/sepolicy/vendor/file_contexts,
+# ikutin lokasi yang sudah dipakai file_contexts lain di tree situ)
+
+/vendor/bin/ledcontrol\.sh    u:object_r:led_control_exec:s0
+/vendor/etc/init/init\.ledcontrol\.rc    u:object_r:vendor_file:s0
