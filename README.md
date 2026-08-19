@@ -4,11 +4,6 @@ Native init service (bukan Magisk module) untuk kontrol LED notifikasi
 `aw22xxx_led` di POCO F4 GT / ingres, dibangun buat nempel permanen di
 ROM build (AxionOS / LineageOS 23.2 based).
 
-Sudah dikonfirmasi bekerja penuh sebagai Magisk module di device asli
-sebelum dikonversi ke bentuk ini - lihat riwayat pengembangan & seluruh
-proses debug di percakapan Claude terkait (mapping effect index, task0,
-dsb tercatat sebagai komentar langsung di `ledcontrol.sh`).
-
 ## State yang ditangani
 
 | Kondisi | Aksi |
