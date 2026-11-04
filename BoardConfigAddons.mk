@@ -31,3 +31,16 @@ TARGET_SYSTEM_PROP += device/xiaomi/miuicamera-ingres/system.prop
 endif
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/miuicamera-$(INGRES_ADDONS_ROM)
 endif
+
+# Dolby (hardware/dolby) menaruh manifest HAL-nya di DEVICE_MANIFEST_FILE. Pada
+# sm8450-common yang memakai DEVICE_MANIFEST_SKUS, hal itu membuat cek VINTF saat
+# membuat zip OTA ikut memeriksa SKU kosong (manifest tanpa target-level/kernel
+# FCM) -> "Kernel FCM version is not specified". Pindahkan ke setiap SKU.
+ifneq ($(DEVICE_MANIFEST_SKUS),)
+INGRES_ADDONS_SKU_MANIFESTS := $(filter hardware/dolby/%,$(DEVICE_MANIFEST_FILE))
+ifneq ($(INGRES_ADDONS_SKU_MANIFESTS),)
+DEVICE_MANIFEST_FILE := $(filter-out $(INGRES_ADDONS_SKU_MANIFESTS),$(DEVICE_MANIFEST_FILE))
+$(foreach sku, $(call to-upper, $(DEVICE_MANIFEST_SKUS)), \
+    $(eval DEVICE_MANIFEST_$(sku)_FILES += $(INGRES_ADDONS_SKU_MANIFESTS)))
+endif
+endif
