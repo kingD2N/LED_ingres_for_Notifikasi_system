@@ -55,7 +55,17 @@ ifeq ($(INGRES_ADDONS_JAMESDSP),true)
 $(call inherit-product-if-exists, vendor/JamesDSP/config.mk)
 endif
 
-# MIUI Camera
+# MIUI Camera (vendor dari Gurinbone, konfigurasi dari Ingres-stuff)
 ifeq ($(INGRES_ADDONS_MIUICAMERA),true)
-$(call inherit-product-if-exists, device/xiaomi/miuicamera-ingres/device.mk)
+MIUICAMERA_DEVICE_PATH := device/xiaomi/miuicamera-ingres
+ifneq ($(wildcard $(MIUICAMERA_DEVICE_PATH)/configs),)
+PRODUCT_SOONG_NAMESPACES += \
+    $(MIUICAMERA_DEVICE_PATH)
+
+PRODUCT_COPY_FILES += \
+    $(MIUICAMERA_DEVICE_PATH)/configs/public.libraries-xiaomi.txt:$(TARGET_COPY_OUT_SYSTEM)/etc/public.libraries-xiaomi.txt \
+    $(MIUICAMERA_DEVICE_PATH)/configs/privapp-permissions-miuicamera.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/privapp-permissions-miuicamera.xml \
+    $(MIUICAMERA_DEVICE_PATH)/configs/miuicamera-hiddenapi-package-allowlist.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/miuicamera-hiddenapi-package-allowlist.xml
+endif
+$(call inherit-product-if-exists, vendor/xiaomi/miuicamera-ingres/miuicamera-ingres-vendor.mk)
 endif
