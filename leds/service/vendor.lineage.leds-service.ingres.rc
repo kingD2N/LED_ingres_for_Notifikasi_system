@@ -1,0 +1,5 @@
+service vendor.leds-ingres /system_ext/bin/hw/vendor.lineage.leds-service.ingres
+    class hal
+    user system
+    group system
+    shutdown critical

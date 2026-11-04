@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="led_hwen_title">Aktif</string>
+    <string name="led_effect_title">Efek</string>
+    <string name="led_use_own_values_title">Pakai nilai sendiri</string>
+    <string name="led_use_own_values_description">Ganti warna dan frekuensi bawaan dengan pilihan sendiri</string>
+    <string name="led_frq_title">Frekuensi</string>
+    <string name="cat_own_values">Nilai sendiri</string>
+    <string name="led_rgb_title">Warna #%1$d</string>
+    <string name="cat_application">Aplikasi</string>
+    <string name="led_use_saved_settings_title">Pakai pengaturan tersimpan</string>
+    <string name="led_use_saved_settings_description">Terapkan pengaturan tersimpan setelah reboot</string>
+    <string name="back">Kembali</string>
+    <string name="led_status_light_title">Lampu status</string>
+    <string name="led_status_light_description">Menyala untuk notifikasi (layar mati), charging, baterai penuh dan lemah</string>
+    <string name="notification_light_service_label">Lampu status LED</string>
+</resources>

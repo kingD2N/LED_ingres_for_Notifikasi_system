@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lampu status LED (app Leds) butuh akses notification listener -->
+    <string name="config_defaultListenerAccessPackages" translatable="false">org.lineageos.leds</string>
+</resources>

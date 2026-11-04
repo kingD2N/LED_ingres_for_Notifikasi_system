@@ -1,0 +1,2 @@
+# JamesDSP (libjamesdsp.so) memakai JIT untuk Liveprog
+allow hal_audio_default self:process execmem;

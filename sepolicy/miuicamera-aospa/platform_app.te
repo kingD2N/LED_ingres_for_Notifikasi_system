@@ -1,0 +1,4 @@
+# MIUI Camera (com.android.camera, ditandatangani platform)
+binder_call(platform_app, hal_camera_default)
+binder_call(hal_camera_default, platform_app)
+allow platform_app hal_xiaomi_camera_hwservice:hwservice_manager find;

@@ -1,0 +1,1 @@
+persist.sys.ingres_leds.status_light    u:object_r:ingres_leds_prop:s0 exact bool

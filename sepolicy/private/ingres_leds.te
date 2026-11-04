@@ -1,0 +1,17 @@
+# Service LED aw22xxx (system_ext) untuk app Leds dan lampu status
+type ingres_leds, domain, coredomain;
+type ingres_leds_exec, exec_type, system_file_type, file_type;
+
+init_daemon_domain(ingres_leds)
+
+binder_use(ingres_leds)
+add_service(ingres_leds, ingres_leds_service)
+
+r_dir_file(ingres_leds, sysfs_leds)
+allow ingres_leds sysfs_leds:file rw_file_perms;
+
+set_prop(ingres_leds, ingres_leds_prop)
+
+# App Leds (platform_app) memanggil service
+allow platform_app ingres_leds_service:service_manager find;
+binder_call(platform_app, ingres_leds)
