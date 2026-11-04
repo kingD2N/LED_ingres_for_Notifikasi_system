@@ -11,6 +11,8 @@
 #include <android/binder_manager.h>
 #include <android/binder_process.h>
 
+#include <cstdlib>
+
 using aidl::vendor::lineage::leds::Leds;
 
 int main() {
