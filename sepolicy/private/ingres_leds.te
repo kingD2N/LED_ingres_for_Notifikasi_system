@@ -2,13 +2,24 @@
 type ingres_leds, domain, coredomain;
 type ingres_leds_exec, exec_type, system_file_type, file_type;
 
+# Node aw22xxx diberi label sendiri: coredomain dilarang menyentuh
+# sysfs_leds:file (neverallow di system/sepolicy/private/coredomain.te)
+type sysfs_ingres_leds, fs_type, sysfs_type;
+
 init_daemon_domain(ingres_leds)
 
 binder_use(ingres_leds)
 add_service(ingres_leds, ingres_leds_service)
 
-r_dir_file(ingres_leds, sysfs_leds)
-allow ingres_leds sysfs_leds:file rw_file_perms;
+# /sys/class/leds/aw22xxx_led -> /sys/devices/platform/soc/890000.i2c/...
+allow ingres_leds sysfs_leds:dir r_dir_perms;
+allow ingres_leds sysfs_leds:lnk_file read;
+allow ingres_leds sysfs_ingres_leds:dir r_dir_perms;
+allow ingres_leds sysfs_ingres_leds:lnk_file read;
+allow ingres_leds sysfs_ingres_leds:file rw_file_perms;
+
+# chown di "on boot" (vendor.lineage.leds-service.ingres.rc)
+allow init sysfs_ingres_leds:file { getattr setattr };
 
 set_prop(ingres_leds, ingres_leds_prop)
 

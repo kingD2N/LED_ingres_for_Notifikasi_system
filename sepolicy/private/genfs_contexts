@@ -1,0 +1,2 @@
+# LED RGB aw22xxx (qupv3_se19, i2c@890000, alamat 0x6a)
+genfscon sysfs /devices/platform/soc/890000.i2c    u:object_r:sysfs_ingres_leds:s0
