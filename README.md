@@ -58,7 +58,7 @@ Sengaja **tidak** dibuang dari zip debloat contoh, karena berisiko:
 | Stk (SIM Toolkit) | menu SIM operator (mis. menu Telkomsel) butuh ini |
 | PrintSpooler | aplikasi yang memanggil fitur cetak bisa crash tanpa ini |
 | QuickAccessWallet, GWP | pembayaran NFC / Google Wallet |
-| Seedvault | satu-satunya backup di build vanilla, dipakai setup wizard untuk restore |
+| Seedvault | satu-satunya aplikasi backup di build vanilla (tanpa GApps) |
 | OmniJaws | penyedia cuaca untuk lockscreen/clock ROM; widget bisa error tanpa ini |
 | Chrome / Trichrome, Photos | browser dan galeri utama build GMS; Trichrome dipakai WebView |
 | EmergencyInfo | info darurat (keselamatan) |
