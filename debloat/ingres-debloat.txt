@@ -1,0 +1,77 @@
+# Aplikasi yang dibuang dari build (IngresDebloat, vendor/ingres/addons)
+
+# AOSP: screensaver, easter egg, bookmark lama
+BasicDreams
+PhotoTable
+EasterEgg
+BookmarkProvider
+PartnerBookmarksProvider
+
+# AOSP: live wallpaper picker, WAP push, layanan cetak bawaan
+LiveWallpapersPicker
+WAPPushManager
+BuiltInPrintService
+PrintRecommendationService
+GooglePrintRecommendationService
+
+# AOSP: backup log panggilan, konfirmasi adb backup
+CallLogBackup
+BackupRestoreConfirmation
+
+# AOSP: musik/EQ lama (diganti Twelve/AudioFX/Dolby/JamesDSP), viewer tag NFC
+Music
+MusicFX
+Tag
+TagGoogle
+
+# Updater OTA resmi ROM (tidak dipakai di build unofficial ingres), alat debug
+Updater
+ParanoidHub
+BatteryStatsViewer
+
+# Google: aksesibilitas (bisa dipasang lagi dari Play Store)
+talkback
+SoundAmplifierPrebuilt
+SwitchAccessPrebuilt
+VoiceAccessPrebuilt
+ScribePrebuilt
+SoundAmplifierPrebuilt_v4.8.758106410
+SwitchAccessPrebuilt_1.16.0.726766860
+ScribePrebuilt_v8.4.773573318
+
+# Google: TTS / Speech Services (bisa dipasang lagi dari Play Store)
+GoogleTTS
+SpeechServicesByGoogle
+
+# Google: Android Auto stub, Wellbeing, Safety, Family Link, Device Policy, pilihan mesin cari
+AndroidAutoStub
+AndroidAutoStubPrebuilt
+Wellbeing
+WellbeingPrebuilt
+PersonalSafety
+SafetyHubPrebuilt
+FamilyLinkParentalControls
+KidsSupervisionStub
+DevicePolicyPrebuilt
+DevicePolicyPrebuilt-v10334460
+SearchSelectorPrebuilt
+
+# Google: Hey Google enrollment, feedback, recorder
+HotwordEnrollmentOKGoogleHEXAGON
+HotwordEnrollmentXGoogleHEXAGON
+HotwordEnrollmentXGoogleHEXAGON_WIDEBAND
+HotwordEnrollmentYGoogleHEXAGON_WIDEBAND
+GoogleFeedback
+RecorderPrebuilt
+RecorderPrebuilt_847964105
+
+# Google: aplikasi pengguna (bisa dipasang lagi dari Play Store)
+CalendarGoogle
+CalendarGooglePrebuilt
+Drive
+Gemini
+Gmail2
+PrebuiltGmail
+Maps
+YouTube
+Videos

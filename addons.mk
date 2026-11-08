@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Paket tambahan ROM POCO F4 GT (ingres):
-#   GameKeys, LED (app Leds + lampu status), Dolby Lunaris, JamesDSP, MIUI Camera.
+#   GameKeys, LED (app Leds + lampu status), Dolby Lunaris, JamesDSP, MIUI Camera,
+#   dan debloat aplikasi yang aman dibuang (debloat/Android.bp).
 #
 # Pakai dari device.mk:
 #   INGRES_ADDONS_ROM := los      # LineageOS / Lunaris (dan turunan LineageOS)
@@ -20,6 +21,7 @@ INGRES_ADDONS_LEDS ?= true
 INGRES_ADDONS_DOLBY ?= true
 INGRES_ADDONS_JAMESDSP ?= true
 INGRES_ADDONS_MIUICAMERA ?= true
+INGRES_ADDONS_DEBLOAT ?= true
 
 PRODUCT_SOONG_NAMESPACES += \
     $(INGRES_ADDONS_PATH)
@@ -68,4 +70,10 @@ PRODUCT_COPY_FILES += \
     $(MIUICAMERA_DEVICE_PATH)/configs/miuicamera-hiddenapi-package-allowlist.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/sysconfig/miuicamera-hiddenapi-package-allowlist.xml
 endif
 $(call inherit-product-if-exists, vendor/xiaomi/miuicamera-ingres/miuicamera-ingres-vendor.mk)
+endif
+
+# Debloat: aplikasi yang aman dibuang (lihat debloat/Android.bp dan README.md)
+ifeq ($(INGRES_ADDONS_DEBLOAT),true)
+PRODUCT_PACKAGES += \
+    IngresDebloat
 endif

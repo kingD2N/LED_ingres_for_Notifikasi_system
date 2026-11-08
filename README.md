@@ -26,7 +26,7 @@ INGRES_ADDONS_ROM := los      # atau aospa
 -include vendor/ingres/addons/BoardConfigAddons.mk
 ```
 
-Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA := false`.
+Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT := false`.
 
 ## LED
 
@@ -36,3 +36,34 @@ Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUI
   baterai penuh = efek 15, charging = hijau, baterai lemah (≤15%) = efek 8,
   notifikasi saat layar mati = efek 2. Bisa dimatikan dari app Leds ("Lampu status").
   Efek pilihan di app dipasang lagi setelah lampu status selesai.
+
+## Debloat
+
+Modul `IngresDebloat` (`debloat/Android.bp`) membuang aplikasi lewat `overrides`, jadi aplikasi
+itu tidak ikut dibangun ke ROM. Nama yang tidak ada di ROM tertentu diabaikan, sehingga satu
+daftar dipakai untuk LineageOS, Lunaris, AOSPA, dan PenguinOS. Daftar lengkap ada di
+`debloat/ingres-debloat.txt` (juga terpasang di `/system_ext/etc/ingres-debloat.txt`).
+
+Yang dibuang: screensaver, easter egg, bookmark lama, live wallpaper picker, WAP push, layanan
+cetak bawaan, backup log panggilan, musik/EQ AOSP lama, viewer tag NFC, updater OTA resmi ROM
+(tidak berguna untuk build unofficial ingres), aksesibilitas Google, Speech Services/Google TTS,
+Android Auto stub, Digital Wellbeing, Personal Safety, Family Link, Device Policy, "Hey Google"
+enrollment, Google Feedback, Recorder, dan aplikasi Google yang bisa dipasang lagi dari Play
+Store (Calendar, Drive, Gemini, Gmail, Maps, YouTube).
+
+Sengaja **tidak** dibuang dari zip debloat contoh, karena berisiko:
+
+| Aplikasi | Alasan tetap dipasang |
+|---|---|
+| Stk (SIM Toolkit) | menu SIM operator (mis. menu Telkomsel) butuh ini |
+| PrintSpooler | aplikasi yang memanggil fitur cetak bisa crash tanpa ini |
+| QuickAccessWallet, GWP | pembayaran NFC / Google Wallet |
+| Seedvault | satu-satunya backup di build vanilla, dipakai setup wizard untuk restore |
+| OmniJaws | penyedia cuaca untuk lockscreen/clock ROM; widget bisa error tanpa ini |
+| Chrome / Trichrome, Photos | browser dan galeri utama build GMS; Trichrome dipakai WebView |
+| EmergencyInfo | info darurat (keselamatan) |
+| PartnerSetup, GooglePartnerSetup | dipakai Setup Wizard Google |
+| Turbo (Device Health Services) | baterai adaptif dan perkiraan sisa baterai |
+| bcr (perekam panggilan), MatLog | fitur ROM; MatLog berguna untuk ambil log tanpa PC |
+
+Matikan debloat: `INGRES_ADDONS_DEBLOAT := false` di `device.mk` sebelum baris addons.
