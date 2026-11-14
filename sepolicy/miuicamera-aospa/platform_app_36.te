@@ -1,0 +1,6 @@
+# MIUI Camera di Android 17: app bersertifikat platform dengan target SDK < 37
+# berjalan sebagai platform_app_36 (system/sepolicy private/seapp_contexts).
+# AOSPA/PenguinOS hanya ada di Android 17, jadi aturan platform_app disalin.
+binder_call(platform_app_36, hal_camera_default)
+binder_call(hal_camera_default, platform_app_36)
+allow platform_app_36 hal_xiaomi_camera_hwservice:hwservice_manager find;

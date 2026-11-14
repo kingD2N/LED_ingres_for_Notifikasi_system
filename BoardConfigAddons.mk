@@ -18,8 +18,15 @@ ifeq ($(INGRES_ADDONS_GAMEKEYS),true)
 -include vendor/xiaomi/gamekey/BoardConfigVendor.mk
 endif
 
+# Android 17: app platform dengan target SDK < 37 berjalan sebagai platform_app_36.
+# Deteksi dari sepolicy sistem supaya ROM Android 16 (Lunaris) tidak terpengaruh.
+INGRES_ADDONS_A17 := $(shell grep -qs 'domain=platform_app_36' system/sepolicy/private/seapp_contexts && echo true)
+
 ifeq ($(INGRES_ADDONS_LEDS),true)
 SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/private
+ifeq ($(INGRES_ADDONS_A17),true)
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/private-a17
+endif
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/vendor
 else ifeq ($(INGRES_ADDONS_JAMESDSP),true)
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/vendor

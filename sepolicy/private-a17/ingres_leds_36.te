@@ -1,0 +1,5 @@
+# Android 17: app Leds (sertifikat platform, target SDK < 37) berjalan sebagai
+# platform_app_36, bukan platform_app. Hanya dipasang di Android 17
+# (lihat INGRES_ADDONS_A17 di BoardConfigAddons.mk).
+allow platform_app_36 ingres_leds_service:service_manager find;
+binder_call(platform_app_36, ingres_leds)
