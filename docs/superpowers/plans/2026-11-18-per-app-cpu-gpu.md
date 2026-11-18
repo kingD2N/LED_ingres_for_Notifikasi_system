@@ -22,7 +22,7 @@
 - Commit sebagai kingD2N, tanpa trailer. Bahasa string UI: Indonesia (`values-in`) dan Inggris (`values`).
 
 ## Fokus Tinjauan (tiap baris punya tes di task pemilik)
-1. Daftar kernel tidak terbaca/kosong (misal GPU ditolak SELinux): field itu disembunyikan/dilewati, tidak crash. (Task 1, 4)
+1. Daftar kernel tidak terbaca/kosong (misal GPU ditolak SELinux): field itu disembunyikan/dilewati, tidak crash. (Task 1)
 2. Nilai tersimpan tidak ada lagi di daftar kernel (kernel diganti): dibuang saat diterapkan. (Task 1)
 3. Pindah aplikasi cepat berturut-turut: yang terakhir menang, tanpa kedip pemulihan di antaranya. (Task 2)
 4. Paket profil sudah dicopot: diabaikan dan dibersihkan dari daftar. (Task 2)
@@ -63,7 +63,7 @@ Perintah uji host (dipakai semua task): `javac -d /tmp/perfout $(find perf/app/j
 
 **Interfaces — Consumes:** Task 1 (`Profile`, `Limits`, `Validator`, `PerfNodes`, `NodeReader`).
 **Produces:**
-- `Snapshot.read(NodeReader)`: nilai saat ini per cluster (min, max, governor) dan GPU (min, max); getter sama seperti `Profile`; `Snapshot.fromProfile`-tidak ada (YAGNI).
+- `Snapshot.read(NodeReader)`: nilai saat ini per cluster (min, max, governor) dan GPU (min, max); getter sama seperti `Profile`.
 - `PropPayload.build(Profile target, Snapshot base, Limits limits, int seq) -> Map<String,String>`: selalu berisi semua kunci `sys.ingres.perf.cpu{0,4,7}_{min,max,gov,floor}`, `sys.ingres.perf.gpu_{min,max,floor}` dan `sys.ingres.perf.apply`=seq. Field kosong di target diisi nilai dari `base` (init selalu menulis nilai konkret). `*_floor` = frekuensi terendah daftar kernel (kunci urutan tulis agar min/max tidak ditolak kernel). `static List<String> keys()`.
 - `interface Sink { void write(Map<String,String> props); }`
 - `PerfStateMachine(Sink, Supplier<Snapshot>, Supplier<Limits>, Predicate<String> isInstalled)` dengan `setEnabled(boolean)`, `setProfiles(Map<String,Profile>)`, `onForeground(String pkg)`, `onScreenOff()`, `onBootCompleted()`, `Map<String,Profile> profiles()` (sudah dibersihkan dari paket tak terpasang).
@@ -92,7 +92,7 @@ Perintah uji host (dipakai semua task): `javac -d /tmp/perfout $(find perf/app/j
 
 ### Task 4: Perekat Android — penyimpanan, pembaca, penulis, pengawas aplikasi
 
-**Files:** Create `kotlin/org/ingres/perf/{PerfApplication,ForegroundWatcher,SysfsNodeReader,PropSink,ProfileStore}.kt`, `perf/app/Android.bp`, `perf/app/AndroidManifest.xml`; Modify `HostTests.java` (tes pengkabelan tidak perlu).
+**Files:** Create `kotlin/org/ingres/perf/{PerfApplication,ForegroundWatcher,SysfsNodeReader,PropSink,ProfileStore}.kt`, `perf/app/Android.bp`, `perf/app/AndroidManifest.xml`; 
 
 **Interfaces — Consumes:** `NodeReader`, `Sink`, `PerfStateMachine`, `Debouncer`, `ProfileCodec`.
 **Produces:**
