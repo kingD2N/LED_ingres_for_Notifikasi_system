@@ -22,7 +22,7 @@ public final class PerfStateMachine {
     private Map<String, Profile> profiles = new LinkedHashMap<>();
     private boolean enabled = true;
     private boolean booted;
-    private boolean screenOff;
+    private boolean screenOff;   // while true the base (Default or snapshot) is in effect
     private String lastPkg;
     private Snapshot snapshot;      // non-null while a tuned session is active
     private Profile lastApplied;    // validated target currently in effect
@@ -79,7 +79,7 @@ public final class PerfStateMachine {
 
     public synchronized void onScreenOff() {
         screenOff = true;
-        if (booted && enabled) restore();
+        evaluate();
     }
 
     public synchronized void onBootCompleted() {
@@ -89,34 +89,41 @@ public final class PerfStateMachine {
     }
 
     // ---- internals (caller holds the lock) ----
+    // State (snapshot / lastApplied) is committed only after sink.write succeeds, so a
+    // throwing Sink or Supplier leaves it consistent and a retry writes again. Exceptions
+    // propagate to the caller. The apply counter always advances, even for a failed write.
 
     private void evaluate() {
-        if (!booted || !enabled || screenOff) return;
+        if (!booted || !enabled) return;
         Limits limits = limitsSupplier.get();
-        Profile target = effective(lastPkg, limits);
+        // screen off -> base: Default when usable, else the raw snapshot
+        Profile target = screenOff ? defaultTarget(limits) : effective(lastPkg, limits);
         if (target.isEmpty()) {
             restore();
             return;
         }
         if (snapshot != null && target.equals(lastApplied)) return;
-        if (snapshot == null) snapshot = snapshotSupplier.get();
+        Snapshot snap = snapshot != null ? snapshot : snapshotSupplier.get();
+        sink.write(PropPayload.build(target, snap, limits, ++seq));
+        snapshot = snap;
         lastApplied = target;
-        sink.write(PropPayload.build(target, snapshot, limits, ++seq));
+    }
+
+    private Profile defaultTarget(Limits limits) {
+        Profile def = profiles.get(DEFAULT_KEY);
+        return def == null ? Profile.empty() : Validator.validate(def, limits);
     }
 
     private Profile effective(String pkg, Limits limits) {
         Profile app = pkg == null ? null : profiles.get(pkg);
         Profile v = app == null ? Profile.empty() : Validator.validate(app, limits);
-        if (!v.isEmpty()) return v;
-        Profile def = profiles.get(DEFAULT_KEY);
-        return def == null ? Profile.empty() : Validator.validate(def, limits);
+        return v.isEmpty() ? defaultTarget(limits) : v;
     }
 
     private void restore() {
         if (snapshot == null) return;
-        Snapshot base = snapshot;
+        sink.write(PropPayload.build(Profile.empty(), snapshot, limitsSupplier.get(), ++seq));
         snapshot = null;
         lastApplied = null;
-        sink.write(PropPayload.build(Profile.empty(), base, limitsSupplier.get(), ++seq));
     }
 }

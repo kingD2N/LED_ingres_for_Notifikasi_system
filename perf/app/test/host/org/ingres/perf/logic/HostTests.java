@@ -227,6 +227,7 @@ public class HostTests {
     static final class Fx {
         final List<Map<String, String>> writes = new ArrayList<>();
         int snapCalls = 0;
+        int failNext = 0; // next N Sink.write calls throw (nothing recorded)
         Snapshot snap = sampleSnapshot();
         final Limits limits = sampleLimits();
         java.util.Set<String> installed = new java.util.HashSet<>(Arrays.asList("a", "b", "x", "d"));
@@ -234,7 +235,10 @@ public class HostTests {
 
         Fx() {
             sm = new PerfStateMachine(
-                    new Sink() { @Override public void write(Map<String, String> p) { writes.add(p); } },
+                    new Sink() { @Override public void write(Map<String, String> p) {
+                            if (failNext > 0) { failNext--; throw new IllegalStateException("sink down"); }
+                            writes.add(p);
+                        } },
                     new java.util.function.Supplier<Snapshot>() {
                         @Override public Snapshot get() { snapCalls++; return snap; } },
                     new java.util.function.Supplier<Limits>() {
@@ -242,6 +246,11 @@ public class HostTests {
                     new java.util.function.Predicate<String>() {
                         @Override public boolean test(String s) { return installed.contains(s); } });
         }
+    }
+
+    /** Write i, or an empty map when absent (so check() fails instead of the runner throwing). */
+    static Map<String, String> at(Fx f, int i) {
+        return i < f.writes.size() ? f.writes.get(i) : new LinkedHashMap<String, String>();
     }
 
     static Profile bigMax(int khz) { return new Profile.Builder().cluster(1, 0, khz, null).build(); }
@@ -308,7 +317,7 @@ public class HostTests {
         int base = f.writes.size();
         f.sm.onForeground("x");
         f.sm.onForeground("a"); // empty stored profile also falls back to Default
-        Map<String, String> w = f.writes.get(0);
+        Map<String, String> w = at(f, 0);
         check("smFallsBackToDefaultProfile", base == 1 && f.writes.size() == 1
                 && "schedutil".equals(w.get("sys.ingres.perf.cpu0_gov"))
                 && w.equals(PropPayload.build(d, f.snap, f.limits, 1))
@@ -336,6 +345,7 @@ public class HostTests {
     }
 
     static void smScreenOffRestoresBase() {
+        // Default exists -> base is Default (snapshot kept)
         Fx f = new Fx();
         f.sm.onBootCompleted();
         Profile d = new Profile.Builder().cluster(0, 0, 691200, null).build();
@@ -343,13 +353,78 @@ public class HostTests {
         f.sm.onForeground("a");
         f.sm.onScreenOff();
         check("smScreenOffRestoresBase", f.writes.size() == 3
-                && f.writes.get(2).equals(restorePayload(f.snap, f.limits, 3))
-                && "1804800".equals(f.writes.get(2).get("sys.ingres.perf.cpu0_max")));
+                && at(f, 2).equals(PropPayload.build(d, f.snap, f.limits, 3))
+                && "691200".equals(at(f, 2).get("sys.ingres.perf.cpu0_max"))
+                && "2419200".equals(at(f, 2).get("sys.ingres.perf.cpu4_max")));
         f.sm.onScreenOff();
         check("smScreenOffTwiceNoWrite", f.writes.size() == 3);
         f.sm.onForeground("a"); // screen back on
-        check("smForegroundAfterScreenOffReapplies", f.writes.size() == 4 && f.snapCalls == 2
-                && "1555200".equals(f.writes.get(3).get("sys.ingres.perf.cpu4_max")));
+        check("smForegroundAfterScreenOffReapplies", f.writes.size() == 4 && f.snapCalls == 1
+                && "1555200".equals(at(f, 3).get("sys.ingres.perf.cpu4_max"))
+                && "1804800".equals(at(f, 3).get("sys.ingres.perf.cpu0_max")));
+    }
+
+    static void smScreenOffWithoutDefaultRestoresSnapshot() {
+        Fx f = new Fx();
+        f.sm.onBootCompleted();
+        f.sm.setProfiles(pm("a", bigMax(1555200)));
+        f.sm.onForeground("a");
+        f.sm.onScreenOff();
+        check("smScreenOffWithoutDefaultRestoresSnapshot", f.writes.size() == 2
+                && at(f, 1).equals(restorePayload(f.snap, f.limits, 2))
+                && "2419200".equals(at(f, 1).get("sys.ingres.perf.cpu4_max")));
+        f.sm.onScreenOff();
+        check("smScreenOffWithoutDefaultTwiceNoWrite", f.writes.size() == 2);
+        f.sm.onForeground("a");
+        check("smScreenOnAfterRestoreRetakesSnapshot", f.writes.size() == 3 && f.snapCalls == 2);
+    }
+
+    static void smApplyFailureKeepsStateRetryable() {
+        Fx f = new Fx();
+        f.sm.onBootCompleted();
+        f.sm.setProfiles(pm("a", bigMax(1555200)));
+        f.failNext = 1;
+        boolean threw = false;
+        try { f.sm.onForeground("a"); } catch (RuntimeException e) { threw = true; }
+        check("smApplyFailurePropagates", threw && f.writes.isEmpty());
+        // retry of the same call must write again (dedupe must not block it)
+        f.sm.onForeground("a");
+        check("smApplyFailureThenRetryWrites", f.writes.size() == 1
+                && at(f, 0).equals(PropPayload.build(bigMax(1555200), f.snap, f.limits, 2)));
+        // a failed first apply must not leave a half-committed "tuned" snapshot:
+        // leaving to an unprofiled app now restores the original values exactly once
+        f.sm.onForeground("x");
+        check("smApplyFailureNoHalfCommit", f.writes.size() == 2
+                && at(f, 1).equals(restorePayload(f.snap, f.limits, 3)));
+    }
+
+    static void smRestoreFailureKeepsOriginalSnapshot() {
+        Fx f = new Fx();
+        f.sm.onBootCompleted();
+        f.sm.setProfiles(pm("a", bigMax(1555200)));
+        f.sm.onForeground("a");
+        Snapshot original = f.snap;
+        // kernel now shows tuned values; a lost snapshot would capture these as the base
+        f.snap = Snapshot.of(bigMax(1555200));
+        f.failNext = 1;
+        boolean threw = false;
+        try { f.sm.onForeground("x"); } catch (RuntimeException e) { threw = true; }
+        check("smRestoreFailurePropagates", threw && f.writes.size() == 1);
+        f.sm.onForeground("x"); // retry
+        check("smRestoreFailureThenRetryUsesOriginalSnapshot", f.writes.size() == 2
+                && at(f, 1).equals(restorePayload(original, f.limits, 3))
+                && "2419200".equals(at(f, 1).get("sys.ingres.perf.cpu4_max"))
+                && f.snapCalls == 1);
+        // switch failure A -> B keeps A in effect; retry writes B
+        Fx g = new Fx();
+        g.sm.onBootCompleted();
+        g.sm.setProfiles(pm("a", bigMax(1555200), "b", bigMax(710400)));
+        g.sm.onForeground("a");
+        g.failNext = 1;
+        try { g.sm.onForeground("b"); } catch (RuntimeException e) { /* expected */ }
+        g.sm.onForeground("b");
+        check("smSwitchFailureThenRetryWrites", g.writes.size() == 2 && g.snapCalls == 1
+                && "710400".equals(at(g, 1).get("sys.ingres.perf.cpu4_max")));
     }
 
     static void smDisabledRestoresAndIgnores() {
@@ -399,7 +474,7 @@ public class HostTests {
         Profile p = new Profile.Builder().cluster(1, 1234, 1555200, "bogus").build();
         f.sm.setProfiles(pm("a", p));
         f.sm.onForeground("a");
-        Map<String, String> w = f.writes.get(0);
+        Map<String, String> w = at(f, 0);
         check("smInvalidValuesAreDroppedAtApplyTime",
                 "1555200".equals(w.get("sys.ingres.perf.cpu4_max"))
                 && "710400".equals(w.get("sys.ingres.perf.cpu4_min"))
@@ -448,6 +523,31 @@ public class HostTests {
         check("debouncerFiresAgainAfterSettling", got.equals(Arrays.asList("c", "d")));
     }
 
+    static void debouncerStaleRunnableNeverDeliversNullOrDuplicate() {
+        // cancel() cannot stop a runnable that already started: model by never removing posted ones
+        final List<Runnable> posted = new ArrayList<>();
+        Scheduler sch = new Scheduler() {
+            @Override public void post(Runnable r, long d) { posted.add(r); }
+            @Override public void cancel() { /* too late for already-started runnables */ }
+        };
+        final List<String> got = new ArrayList<>();
+        Debouncer db = new Debouncer(sch, 300L, new java.util.function.Consumer<String>() {
+            @Override public void accept(String s) { got.add(s); } });
+        db.submit("a");
+        Runnable r1 = posted.get(0);
+        db.submit("b");
+        Runnable r2 = posted.get(1);
+        r1.run(); // stale (superseded) runnable fires first
+        r2.run();
+        r1.run();
+        r2.run(); // duplicate fire
+        check("debouncerStaleRunnableNeverDeliversNullOrDuplicate",
+                got.equals(Arrays.asList("b")) && !got.contains(null));
+        db.submit(null); // null is never delivered
+        for (Runnable r : new ArrayList<>(posted)) r.run();
+        check("debouncerNullSubmitIgnored", got.equals(Arrays.asList("b")));
+    }
+
     public static void main(String[] args) {
         codecRoundTrip();
         codecGarbageGivesEmpty();
@@ -466,11 +566,15 @@ public class HostTests {
         smFallsBackToDefaultProfile();
         smRestoresToDefaultWhenLeavingAppProfile();
         smScreenOffRestoresBase();
+        smScreenOffWithoutDefaultRestoresSnapshot();
+        smApplyFailureKeepsStateRetryable();
+        smRestoreFailureKeepsOriginalSnapshot();
         smDisabledRestoresAndIgnores();
         smBootAppliesDefaultOnlyAfterBootCompleted();
         smInvalidValuesAreDroppedAtApplyTime();
         smDropsUninstalledPackages();
         debouncerLastWins();
+        debouncerStaleRunnableNeverDeliversNullOrDuplicate();
         if (failed > 0) {
             System.out.println(failed + " FAILED of " + total);
             System.exit(1);
