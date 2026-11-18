@@ -20,6 +20,7 @@
         <activity
             android:name=".ui.PerfActivity"
             android:exported="true"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/perf_settings_title"
             android:theme="@style/Theme.IngresPerf">
             <intent-filter>
