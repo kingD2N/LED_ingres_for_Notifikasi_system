@@ -1,6 +1,6 @@
 # CPU / GPU / Governor per aplikasi (ingres-addons)
 
-Status: menunggu persetujuan kingD2N. Dicoba di AxionOS dulu.
+Status: disetujui kingD2N (2026-11-18). Dicoba di AxionOS dulu.
 
 ## Tujuan dan alasan
 kingD2N ingin mengatur secara manual, per aplikasi: batas frekuensi CPU (tiap
@@ -72,6 +72,12 @@ C. Perf HAL/hint bawaan: tidak bisa atur frekuensi manual. Ditolak.
 - Cara membaca daftar frekuensi GPU dari app (sepolicy lintas partisi): uji
   coba di HP; cadangan: init menulis daftarnya ke property saat boot.
 - Multi-window: pakai aplikasi top-resumed.
+
+## Ikon
+Ikon app `IngresPerf` memakai gambar yang dikirim kingD2N (foto profil GitHub-nya).
+Berkas siap pakai: `docs/superpowers/assets/ic_launcher_art.png` (432x432,
+foreground adaptif; gambar mengisi area aman 72/108 di tengah). Latar adaptif:
+warna solid #524558. Ikon app LEDs tidak diubah (belum diminta).
 
 ## Verifikasi
 - Baca-saja di HP: daftar frekuensi dan governor tiap policy dan GPU (satu perintah).
