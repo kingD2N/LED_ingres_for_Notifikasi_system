@@ -161,8 +161,18 @@ public class HostTests {
         return Snapshot.read(fake(m));
     }
 
-    static Map<String, String> restorePayload(Snapshot s, Limits l, int seq) {
-        return PropPayload.build(Profile.empty(), s, l, seq);
+    /** Restore write: only the fields {@code owned} (the profile in effect) had set come back. */
+    static Map<String, String> restorePayload(Snapshot s, Limits l, int seq, Profile owned) {
+        return PropPayload.build(Profile.empty(), s, l, seq, owned);
+    }
+
+    /** Every field set (all clusters min/max/gov, GPU min/max): "owns" everything. */
+    static Profile ownsAll() {
+        return new Profile.Builder()
+                .cluster(0, 300000, 1804800, "walt")
+                .cluster(1, 710400, 2419200, "walt")
+                .cluster(2, 844800, 2995200, "walt")
+                .gpu(285000000L, 999000000L).build();
     }
 
     static void snapshotReadsNodes() {
@@ -174,40 +184,117 @@ public class HostTests {
                 && e.minKhz(0) == 0 && e.governor(0) == null && e.gpuMaxHz() == 0L);
     }
 
-    static void payloadFillsEmptyFieldsFromSnapshot() {
+    static void payloadUnownedFieldsStayEmpty() {
+        // nothing owned yet: only the target's own field is written, the rest stays ""
         Profile t = new Profile.Builder().cluster(1, 0, 1555200, null).build();
-        Map<String, String> m = PropPayload.build(t, sampleSnapshot(), sampleLimits(), 5);
-        check("payloadFillsEmptyFieldsFromSnapshot",
+        Map<String, String> m = PropPayload.build(t, sampleSnapshot(), sampleLimits(), 5, Profile.empty());
+        check("payloadUnownedFieldsStayEmpty",
                 "1555200".equals(m.get("sys.ingres.perf.cpu4_max"))
-                && "710400".equals(m.get("sys.ingres.perf.cpu4_min"))
-                && "walt".equals(m.get("sys.ingres.perf.cpu4_gov"))
-                && "300000".equals(m.get("sys.ingres.perf.cpu0_min"))
-                && "1804800".equals(m.get("sys.ingres.perf.cpu0_max"))
-                && "walt".equals(m.get("sys.ingres.perf.cpu0_gov"))
-                && "844800".equals(m.get("sys.ingres.perf.cpu7_min"))
-                && "2995200".equals(m.get("sys.ingres.perf.cpu7_max"))
-                && "285000000".equals(m.get("sys.ingres.perf.gpu_min"))
-                && "999000000".equals(m.get("sys.ingres.perf.gpu_max"))
+                && "".equals(m.get("sys.ingres.perf.cpu4_min"))
+                && "".equals(m.get("sys.ingres.perf.cpu4_gov"))
+                && "".equals(m.get("sys.ingres.perf.cpu4_floor"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_min"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_max"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_gov"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_floor"))
+                && "".equals(m.get("sys.ingres.perf.cpu7_min"))
+                && "".equals(m.get("sys.ingres.perf.cpu7_max"))
+                && "".equals(m.get("sys.ingres.perf.gpu_min"))
+                && "".equals(m.get("sys.ingres.perf.gpu_max"))
+                && "".equals(m.get("sys.ingres.perf.gpu_floor"))
+                && "5".equals(m.get("sys.ingres.perf.apply"))
                 && m.size() == 16);
+        // null owned behaves like empty
+        check("payloadNullOwnedIsEmpty",
+                m.equals(PropPayload.build(t, sampleSnapshot(), sampleLimits(), 5, null)));
+        // owned fields the target leaves unset come back from the snapshot
+        Profile owned = new Profile.Builder().cluster(0, 691200, 691200, "schedutil")
+                .cluster(1, 0, 0, "performance").gpu(0, 818000000L).build();
+        Map<String, String> o = PropPayload.build(t, sampleSnapshot(), sampleLimits(), 6, owned);
+        check("payloadOwnedFieldsRestoredFromSnapshot",
+                "300000".equals(o.get("sys.ingres.perf.cpu0_min"))
+                && "1804800".equals(o.get("sys.ingres.perf.cpu0_max"))
+                && "walt".equals(o.get("sys.ingres.perf.cpu0_gov"))
+                && "walt".equals(o.get("sys.ingres.perf.cpu4_gov"))
+                && "1555200".equals(o.get("sys.ingres.perf.cpu4_max"))
+                && "".equals(o.get("sys.ingres.perf.cpu4_min"))
+                && "999000000".equals(o.get("sys.ingres.perf.gpu_max"))
+                && "".equals(o.get("sys.ingres.perf.gpu_min"))
+                && "".equals(o.get("sys.ingres.perf.cpu7_max")));
         // target values win over snapshot
         Profile t2 = new Profile.Builder().cluster(0, 691200, 1804800, "schedutil")
                 .gpu(285000000L, 818000000L).build();
-        Map<String, String> m2 = PropPayload.build(t2, sampleSnapshot(), sampleLimits(), 1);
+        Map<String, String> m2 = PropPayload.build(t2, sampleSnapshot(), sampleLimits(), 1, ownsAll());
         check("payloadTargetOverridesSnapshot",
                 "691200".equals(m2.get("sys.ingres.perf.cpu0_min"))
                 && "schedutil".equals(m2.get("sys.ingres.perf.cpu0_gov"))
-                && "818000000".equals(m2.get("sys.ingres.perf.gpu_max")));
-        // still empty after snapshot fill -> "" (not "0")
+                && "818000000".equals(m2.get("sys.ingres.perf.gpu_max"))
+                && "2419200".equals(m2.get("sys.ingres.perf.cpu4_max")));
+        // owned but snapshot unknown -> "" (not "0")
         Map<String, String> m3 = PropPayload.build(Profile.empty(),
-                Snapshot.read(fake(new HashMap<String, String>())), sampleLimits(), 2);
+                Snapshot.read(fake(new HashMap<String, String>())), sampleLimits(), 2, ownsAll());
         check("payloadUnknownFieldsAreEmptyString",
                 "".equals(m3.get("sys.ingres.perf.cpu0_min"))
+                && "".equals(m3.get("sys.ingres.perf.cpu0_floor"))
                 && "".equals(m3.get("sys.ingres.perf.cpu7_gov"))
-                && "".equals(m3.get("sys.ingres.perf.gpu_max")));
+                && "".equals(m3.get("sys.ingres.perf.gpu_max"))
+                && "".equals(m3.get("sys.ingres.perf.gpu_floor")));
+    }
+
+    static void payloadFloorOnlyWithMin() {
+        Limits l = sampleLimits();
+        // max only: no floor (a floor alone would drop the unowned min to the kernel minimum)
+        Profile maxOnly = new Profile.Builder().cluster(0, 0, 691200, null).gpu(0, 818000000L).build();
+        Map<String, String> a = PropPayload.build(maxOnly, sampleSnapshot(), l, 1, Profile.empty());
+        check("payloadNoFloorWithoutMin",
+                "".equals(a.get("sys.ingres.perf.cpu0_floor")) && "".equals(a.get("sys.ingres.perf.cpu0_min"))
+                && "691200".equals(a.get("sys.ingres.perf.cpu0_max"))
+                && "".equals(a.get("sys.ingres.perf.gpu_floor")) && "".equals(a.get("sys.ingres.perf.gpu_min")));
+        // min set: floor is the lowest kernel frequency
+        Profile withMin = new Profile.Builder().cluster(0, 691200, 0, null).gpu(818000000L, 0).build();
+        Map<String, String> b = PropPayload.build(withMin, sampleSnapshot(), l, 2, Profile.empty());
+        check("payloadFloorWithMin",
+                "300000".equals(b.get("sys.ingres.perf.cpu0_floor")) && "691200".equals(b.get("sys.ingres.perf.cpu0_min"))
+                && "".equals(b.get("sys.ingres.perf.cpu0_max"))
+                && "285000000".equals(b.get("sys.ingres.perf.gpu_floor"))
+                && "818000000".equals(b.get("sys.ingres.perf.gpu_min")));
+    }
+
+    static void payloadMinClampedToMax() {
+        // target min above the max restored from the snapshot (owned by the previous profile)
+        Snapshot low = Snapshot.of(new Profile.Builder().cluster(1, 710400, 1555200, "walt")
+                .gpu(285000000L, 818000000L).build());
+        Profile t = new Profile.Builder().cluster(1, 2419200, 0, null).gpu(999000000L, 0).build();
+        Profile owned = new Profile.Builder().cluster(1, 0, 1555200, null).gpu(0, 818000000L).build();
+        Map<String, String> m = PropPayload.build(t, low, sampleLimits(), 1, owned);
+        check("payloadMinClampedToMax",
+                "1555200".equals(m.get("sys.ingres.perf.cpu4_min"))
+                && "1555200".equals(m.get("sys.ingres.perf.cpu4_max"))
+                && "818000000".equals(m.get("sys.ingres.perf.gpu_min"))
+                && "818000000".equals(m.get("sys.ingres.perf.gpu_max")));
+    }
+
+    static void payloadSwitchRestoresOnlyFieldsPreviousOwned() {
+        // A owns cluster0 max + gov and GPU max; B sets only cluster1 min
+        Profile a = new Profile.Builder().cluster(0, 0, 691200, "schedutil").gpu(0, 818000000L).build();
+        Profile b = new Profile.Builder().cluster(1, 1555200, 0, null).build();
+        Map<String, String> m = PropPayload.build(b, sampleSnapshot(), sampleLimits(), 2, a);
+        check("payloadSwitchRestoresOnlyFieldsPreviousOwned",
+                "1804800".equals(m.get("sys.ingres.perf.cpu0_max"))
+                && "walt".equals(m.get("sys.ingres.perf.cpu0_gov"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_min"))
+                && "".equals(m.get("sys.ingres.perf.cpu0_floor"))
+                && "999000000".equals(m.get("sys.ingres.perf.gpu_max"))
+                && "".equals(m.get("sys.ingres.perf.gpu_min"))
+                && "1555200".equals(m.get("sys.ingres.perf.cpu4_min"))
+                && "710400".equals(m.get("sys.ingres.perf.cpu4_floor"))
+                && "".equals(m.get("sys.ingres.perf.cpu4_max"))
+                && "".equals(m.get("sys.ingres.perf.cpu4_gov"))
+                && "".equals(m.get("sys.ingres.perf.cpu7_min")));
     }
 
     static void payloadHasFloorAndApplySeq() {
-        Map<String, String> m = PropPayload.build(Profile.empty(), sampleSnapshot(), sampleLimits(), 42);
+        Map<String, String> m = PropPayload.build(Profile.empty(), sampleSnapshot(), sampleLimits(), 42, ownsAll());
         check("payloadHasFloorAndApplySeq",
                 "300000".equals(m.get("sys.ingres.perf.cpu0_floor"))
                 && "710400".equals(m.get("sys.ingres.perf.cpu4_floor"))
@@ -221,7 +308,7 @@ public class HostTests {
                 && new ArrayList<String>(m.keySet()).equals(keys));
         // empty kernel list -> floor from snapshot value
         Limits none = Limits.read(fake(new HashMap<String, String>()));
-        Map<String, String> n = PropPayload.build(Profile.empty(), sampleSnapshot(), none, 3);
+        Map<String, String> n = PropPayload.build(Profile.empty(), sampleSnapshot(), none, 3, ownsAll());
         check("payloadFloorFallsBackToSnapshotMin",
                 "300000".equals(n.get("sys.ingres.perf.cpu0_floor"))
                 && "285000000".equals(n.get("sys.ingres.perf.gpu_floor")));
@@ -274,9 +361,10 @@ public class HostTests {
         Map<String, String> w = f.writes.isEmpty() ? null : f.writes.get(0);
         check("smAppliesAppProfileOnForeground", f.writes.size() == 1 && w != null
                 && "1555200".equals(w.get("sys.ingres.perf.cpu4_max"))
-                && "710400".equals(w.get("sys.ingres.perf.cpu4_min"))
+                && "".equals(w.get("sys.ingres.perf.cpu4_min"))
+                && "".equals(w.get("sys.ingres.perf.cpu0_max"))
                 && "1".equals(w.get("sys.ingres.perf.apply"))
-                && w.equals(PropPayload.build(bigMax(1555200), f.snap, f.limits, 1)));
+                && w.equals(PropPayload.build(bigMax(1555200), f.snap, f.limits, 1, Profile.empty())));
         f.sm.onForeground("a"); // same app again: no duplicate write
         check("smSameAppNoDuplicateWrite", f.writes.size() == 1);
     }
@@ -303,8 +391,10 @@ public class HostTests {
         f.sm.onForeground("a");
         f.sm.onForeground("x");
         check("smRestoresSnapshotWhenLeavingToUnprofiledApp", f.writes.size() == 2
-                && f.writes.get(1).equals(restorePayload(f.snap, f.limits, 2))
-                && "2419200".equals(f.writes.get(1).get("sys.ingres.perf.cpu4_max")));
+                && f.writes.get(1).equals(restorePayload(f.snap, f.limits, 2, bigMax(1555200)))
+                && "2419200".equals(f.writes.get(1).get("sys.ingres.perf.cpu4_max"))
+                && "".equals(f.writes.get(1).get("sys.ingres.perf.cpu4_min"))
+                && "".equals(f.writes.get(1).get("sys.ingres.perf.cpu0_max")));
         f.sm.onForeground("x"); // already restored: nothing
         check("smNoRestoreTwice", f.writes.size() == 2);
         // snapshot was dropped: a new tuned session takes a fresh one
@@ -324,7 +414,7 @@ public class HostTests {
         Map<String, String> w = at(f, 0);
         check("smFallsBackToDefaultProfile", base == 1 && f.writes.size() == 1
                 && "schedutil".equals(w.get("sys.ingres.perf.cpu0_gov"))
-                && w.equals(PropPayload.build(d, f.snap, f.limits, 1))
+                && w.equals(PropPayload.build(d, f.snap, f.limits, 1, Profile.empty()))
                 && !f.sm.profiles().containsKey("a") && f.sm.profiles().containsKey("*"));
     }
 
@@ -339,13 +429,13 @@ public class HostTests {
         f.sm.onForeground("x");  // leave to unprofiled -> Default (not raw snapshot)
         check("smRestoresToDefaultWhenLeavingAppProfile", f.snapCalls == 1 && f.writes.size() == 2
                 && "1555200".equals(f.writes.get(0).get("sys.ingres.perf.cpu4_max"))
-                && f.writes.get(1).equals(PropPayload.build(d, f.snap, f.limits, 2))
+                && f.writes.get(1).equals(PropPayload.build(d, f.snap, f.limits, 2, bigMax(1555200)))
                 && "schedutil".equals(f.writes.get(1).get("sys.ingres.perf.cpu0_gov"))
                 && "2419200".equals(f.writes.get(1).get("sys.ingres.perf.cpu4_max")));
         // Default removed while tuned -> restore the pre-tuning snapshot
         f.sm.setProfiles(pm("a", bigMax(1555200)));
         check("smDefaultRemovedRestoresSnapshot", f.writes.size() == 3
-                && f.writes.get(2).equals(restorePayload(f.snap, f.limits, 3)));
+                && f.writes.get(2).equals(restorePayload(f.snap, f.limits, 3, d)));
     }
 
     static void smScreenOffRestoresBase() {
@@ -357,7 +447,7 @@ public class HostTests {
         f.sm.onForeground("a");
         f.sm.onScreenOff();
         check("smScreenOffRestoresBase", f.writes.size() == 3
-                && at(f, 2).equals(PropPayload.build(d, f.snap, f.limits, 3))
+                && at(f, 2).equals(PropPayload.build(d, f.snap, f.limits, 3, bigMax(1555200)))
                 && "691200".equals(at(f, 2).get("sys.ingres.perf.cpu0_max"))
                 && "2419200".equals(at(f, 2).get("sys.ingres.perf.cpu4_max")));
         f.sm.onScreenOff();
@@ -375,7 +465,7 @@ public class HostTests {
         f.sm.onForeground("a");
         f.sm.onScreenOff();
         check("smScreenOffWithoutDefaultRestoresSnapshot", f.writes.size() == 2
-                && at(f, 1).equals(restorePayload(f.snap, f.limits, 2))
+                && at(f, 1).equals(restorePayload(f.snap, f.limits, 2, bigMax(1555200)))
                 && "2419200".equals(at(f, 1).get("sys.ingres.perf.cpu4_max")));
         f.sm.onScreenOff();
         check("smScreenOffWithoutDefaultTwiceNoWrite", f.writes.size() == 2);
@@ -394,12 +484,12 @@ public class HostTests {
         // retry of the same call must write again (dedupe must not block it)
         f.sm.onForeground("a");
         check("smApplyFailureThenRetryWrites", f.writes.size() == 1
-                && at(f, 0).equals(PropPayload.build(bigMax(1555200), f.snap, f.limits, 2)));
+                && at(f, 0).equals(PropPayload.build(bigMax(1555200), f.snap, f.limits, 2, Profile.empty())));
         // a failed first apply must not leave a half-committed "tuned" snapshot:
         // leaving to an unprofiled app now restores the original values exactly once
         f.sm.onForeground("x");
         check("smApplyFailureNoHalfCommit", f.writes.size() == 2
-                && at(f, 1).equals(restorePayload(f.snap, f.limits, 3)));
+                && at(f, 1).equals(restorePayload(f.snap, f.limits, 3, bigMax(1555200))));
     }
 
     static void smRestoreFailureKeepsOriginalSnapshot() {
@@ -416,7 +506,7 @@ public class HostTests {
         check("smRestoreFailurePropagates", threw && f.writes.size() == 1);
         f.sm.onForeground("x"); // retry
         check("smRestoreFailureThenRetryUsesOriginalSnapshot", f.writes.size() == 2
-                && at(f, 1).equals(restorePayload(original, f.limits, 3))
+                && at(f, 1).equals(restorePayload(original, f.limits, 3, bigMax(1555200)))
                 && "2419200".equals(at(f, 1).get("sys.ingres.perf.cpu4_max"))
                 && f.snapCalls == 1);
         // switch failure A -> B keeps A in effect; retry writes B
@@ -441,7 +531,7 @@ public class HostTests {
         f.sm.setEnabled(false);
         check("smDisabledRestoresAndIgnores",
                 f.writes.size() == n + 1
-                && f.writes.get(n).equals(restorePayload(f.snap, f.limits, n + 1)));
+                && f.writes.get(n).equals(restorePayload(f.snap, f.limits, n + 1, bigMax(1555200))));
         f.sm.onForeground("a");
         f.sm.onScreenOff();
         f.sm.setProfiles(pm("*", d));
@@ -449,7 +539,7 @@ public class HostTests {
         check("smDisabledIgnoresEvents", f.writes.size() == n + 1);
         f.sm.setEnabled(true); // re-evaluates last foreground (x, unprofiled -> Default)
         check("smEnableReevaluatesDefault", f.writes.size() == n + 2
-                && f.writes.get(n + 1).equals(PropPayload.build(d, f.snap, f.limits, n + 2)));
+                && f.writes.get(n + 1).equals(PropPayload.build(d, f.snap, f.limits, n + 2, Profile.empty())));
     }
 
     static void smBootAppliesDefaultOnlyAfterBootCompleted() {
@@ -461,7 +551,7 @@ public class HostTests {
         check("smNoWriteBeforeBootCompleted", f.writes.isEmpty() && f.snapCalls == 0);
         f.sm.onBootCompleted();
         check("smBootAppliesDefaultOnlyAfterBootCompleted", f.writes.size() == 1
-                && f.writes.get(0).equals(PropPayload.build(d, f.snap, f.limits, 1)));
+                && f.writes.get(0).equals(PropPayload.build(d, f.snap, f.limits, 1, Profile.empty())));
         f.sm.onBootCompleted();
         check("smBootCompletedTwiceNoDoubleApply", f.writes.size() == 1);
         // no Default -> boot writes nothing
@@ -481,8 +571,8 @@ public class HostTests {
         Map<String, String> w = at(f, 0);
         check("smInvalidValuesAreDroppedAtApplyTime",
                 "1555200".equals(w.get("sys.ingres.perf.cpu4_max"))
-                && "710400".equals(w.get("sys.ingres.perf.cpu4_min"))
-                && "walt".equals(w.get("sys.ingres.perf.cpu4_gov")));
+                && "".equals(w.get("sys.ingres.perf.cpu4_min"))
+                && "".equals(w.get("sys.ingres.perf.cpu4_gov")));
         // profile entirely invalid -> nothing to apply, nothing written
         Fx g = new Fx();
         g.sm.onBootCompleted();
@@ -501,6 +591,118 @@ public class HostTests {
         f.installed.remove("a"); // uninstalled later: profiles() is live
         check("smDropsPackageUninstalledLater", f.sm.profiles().size() == 1
                 && f.sm.profiles().containsKey("*"));
+    }
+
+    static void smSwitchRestoresOnlyFieldsPreviousOwned() {
+        Fx f = new Fx();
+        f.sm.onBootCompleted();
+        Profile a = new Profile.Builder().cluster(0, 0, 691200, "schedutil").build();
+        Profile b = new Profile.Builder().cluster(1, 1555200, 0, null).build();
+        f.sm.setProfiles(pm("a", a, "b", b));
+        f.sm.onForeground("a");
+        f.sm.onForeground("b");
+        f.sm.onForeground("x");
+        check("smSwitchRestoresOnlyFieldsPreviousOwned", f.writes.size() == 3
+                && at(f, 1).equals(PropPayload.build(b, f.snap, f.limits, 2, a))
+                && "1804800".equals(at(f, 1).get("sys.ingres.perf.cpu0_max"))
+                && "walt".equals(at(f, 1).get("sys.ingres.perf.cpu0_gov"))
+                && "".equals(at(f, 1).get("sys.ingres.perf.cpu4_max"))
+                // leaving B restores only what B owned (A's fields were already restored)
+                && at(f, 2).equals(restorePayload(f.snap, f.limits, 3, b))
+                && "710400".equals(at(f, 2).get("sys.ingres.perf.cpu4_min"))
+                && "".equals(at(f, 2).get("sys.ingres.perf.cpu0_max"))
+                && "".equals(at(f, 2).get("sys.ingres.perf.cpu0_gov")));
+    }
+
+    static void smDisableRetriesFailedRestore() {
+        Fx f = new Fx();
+        f.sm.onBootCompleted();
+        f.sm.setProfiles(pm("a", bigMax(1555200)));
+        f.sm.onForeground("a");
+        f.failNext = 1;
+        boolean threw = false;
+        try { f.sm.setEnabled(false); } catch (RuntimeException e) { threw = true; }
+        check("smDisableRestoreFailurePropagates", threw && f.writes.size() == 1 && f.sm.hasSnapshot());
+        f.sm.setEnabled(false); // retry must still restore
+        check("smDisableRetriesFailedRestore", f.writes.size() == 2
+                && at(f, 1).equals(restorePayload(f.snap, f.limits, 3, bigMax(1555200)))
+                && !f.sm.hasSnapshot());
+        f.sm.setEnabled(false); // nothing left to restore
+        f.sm.onForeground("a"); // disabled: ignored
+        check("smDisableAgainNoWrite", f.writes.size() == 2);
+        f.sm.setEnabled(true);
+        check("smEnableAfterRetryReapplies", f.writes.size() == 3
+                && "1555200".equals(at(f, 2).get("sys.ingres.perf.cpu4_max")));
+        f.sm.setEnabled(true); // already on: no extra write
+        check("smEnableTwiceNoWrite", f.writes.size() == 3);
+    }
+
+    static void smHasSnapshotTransitions() {
+        Fx f = new Fx();
+        check("smHasSnapshotFalseInitially", !f.sm.hasSnapshot());
+        f.sm.setProfiles(pm("a", bigMax(1555200)));
+        f.sm.onBootCompleted();
+        check("smHasSnapshotFalseWithoutApply", !f.sm.hasSnapshot());
+        f.failNext = 1;
+        try { f.sm.onForeground("a"); } catch (RuntimeException e) { /* expected */ }
+        check("smHasSnapshotFalseAfterFailedApply", !f.sm.hasSnapshot());
+        f.sm.onForeground("a");
+        check("smHasSnapshotTrueAfterApply", f.sm.hasSnapshot());
+        f.sm.onForeground("x");
+        check("smHasSnapshotFalseAfterRestore", !f.sm.hasSnapshot());
+    }
+
+    static void snapshotValuesRoundTrip() {
+        Snapshot s = sampleSnapshot();
+        Profile v = s.values();
+        Snapshot r = Snapshot.of(ProfileCodec.decode(ProfileCodec.encode(v)));
+        boolean same = r.values().equals(v) && r.gpuMinHz() == s.gpuMinHz() && r.gpuMaxHz() == s.gpuMaxHz();
+        for (int c = 0; c < 3; c++) {
+            same &= r.minKhz(c) == s.minKhz(c) && r.maxKhz(c) == s.maxKhz(c)
+                    && s.governor(c).equals(r.governor(c));
+        }
+        check("snapshotValuesRoundTrip", same && v.minKhz(0) == 300000
+                && Snapshot.of(null).values().isEmpty());
+    }
+
+    static void snapshotUsableFor() {
+        Limits l = sampleLimits();
+        Limits none = Limits.read(fake(new HashMap<String, String>()));
+        check("snapshotUsableWhenComplete", sampleSnapshot().isUsableFor(l));
+        check("snapshotEmptyUnusable", !Snapshot.of(Profile.empty()).isUsableFor(l));
+        check("snapshotEmptyUsableWithoutLimits", Snapshot.of(Profile.empty()).isUsableFor(none));
+        Profile full = sampleSnapshot().values();
+        Profile.Builder b;
+        b = rebuild(full); b.cluster(1, 0, full.maxKhz(1), full.governor(1));
+        check("snapshotUnusableCpuMinZero", !Snapshot.of(b.build()).isUsableFor(l));
+        b = rebuild(full); b.cluster(2, full.minKhz(2), 0, full.governor(2));
+        check("snapshotUnusableCpuMaxZero", !Snapshot.of(b.build()).isUsableFor(l));
+        b = rebuild(full); b.cluster(0, full.minKhz(0), full.maxKhz(0), null);
+        check("snapshotUnusableGovMissing", !Snapshot.of(b.build()).isUsableFor(l));
+        b = rebuild(full); b.gpu(0, full.gpuMaxHz());
+        check("snapshotUnusableGpuMinZero", !Snapshot.of(b.build()).isUsableFor(l));
+        b = rebuild(full); b.gpu(full.gpuMinHz(), 0);
+        check("snapshotUnusableGpuMaxZero", !Snapshot.of(b.build()).isUsableFor(l));
+        // GPU list unreadable (SELinux): GPU values are not required
+        Map<String, String> cpuOnly = new HashMap<>();
+        cpuOnly.put(PerfNodes.cpuAvailFreqs(0), "300000 691200 1804800");
+        cpuOnly.put(PerfNodes.cpuAvailGovs(0), "walt schedutil");
+        Limits lc = Limits.read(fake(cpuOnly));
+        b = rebuild(full); b.gpu(0, 0); b.cluster(1, 0, 0, null);
+        check("snapshotUsableWhenGpuAndClusterUnlisted", Snapshot.of(b.build()).isUsableFor(lc));
+        // governor list unreadable: governor not required
+        Map<String, String> noGov = new HashMap<>();
+        noGov.put(PerfNodes.cpuAvailFreqs(0), "300000 691200 1804800");
+        b = rebuild(full); b.cluster(0, full.minKhz(0), full.maxKhz(0), null);
+        b.cluster(1, 0, 0, null); b.cluster(2, 0, 0, null); b.gpu(0, 0);
+        check("snapshotUsableWhenGovListUnreadable", Snapshot.of(b.build()).isUsableFor(Limits.read(fake(noGov))));
+        check("snapshotUsableForNullLimits", Snapshot.of(full).isUsableFor(null));
+    }
+
+    static Profile.Builder rebuild(Profile p) {
+        Profile.Builder b = new Profile.Builder();
+        for (int c = 0; c < 3; c++) b.cluster(c, p.minKhz(c), p.maxKhz(c), p.governor(c));
+        return b.gpu(p.gpuMinHz(), p.gpuMaxHz());
     }
 
     static void debouncerLastWins() {
@@ -625,8 +827,13 @@ public class HostTests {
         validatorEmptyLimitsDropsField();
         nodePaths();
         snapshotReadsNodes();
-        payloadFillsEmptyFieldsFromSnapshot();
+        payloadUnownedFieldsStayEmpty();
+        payloadFloorOnlyWithMin();
+        payloadMinClampedToMax();
+        payloadSwitchRestoresOnlyFieldsPreviousOwned();
         payloadHasFloorAndApplySeq();
+        snapshotValuesRoundTrip();
+        snapshotUsableFor();
         smAppliesAppProfileOnForeground();
         smTakesSnapshotOnlyOnce();
         smRestoresSnapshotWhenLeavingToUnprofiledApp();
@@ -640,6 +847,9 @@ public class HostTests {
         smBootAppliesDefaultOnlyAfterBootCompleted();
         smInvalidValuesAreDroppedAtApplyTime();
         smDropsUninstalledPackages();
+        smSwitchRestoresOnlyFieldsPreviousOwned();
+        smDisableRetriesFailedRestore();
+        smHasSnapshotTransitions();
         debouncerLastWins();
         debouncerStaleRunnableNeverDeliversNullOrDuplicate();
         if (args.length > 0) rcMatchesPayloadAndNodes(args[0]);

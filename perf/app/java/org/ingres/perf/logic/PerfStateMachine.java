@@ -36,15 +36,20 @@ public final class PerfStateMachine {
         this.isInstalled = isInstalled;
     }
 
+    /** Turning off always (re)tries the restore, so a failed restore can be retried. */
     public synchronized void setEnabled(boolean on) {
-        if (enabled == on) return;
-        enabled = on;
         if (!on) {
-            restore();
-        } else {
-            evaluate();
+            enabled = false;
+            restore(); // no-op when nothing is tuned
+            return;
         }
+        if (enabled) return;
+        enabled = true;
+        evaluate();
     }
+
+    /** True while a tuned session is active (a base snapshot is held). */
+    public synchronized boolean hasSnapshot() { return snapshot != null; }
 
     public synchronized void setProfiles(Map<String, Profile> p) {
         Map<String, Profile> m = new LinkedHashMap<>();
@@ -104,7 +109,7 @@ public final class PerfStateMachine {
         }
         if (snapshot != null && target.equals(lastApplied)) return;
         Snapshot snap = snapshot != null ? snapshot : snapshotSupplier.get();
-        sink.write(PropPayload.build(target, snap, limits, ++seq));
+        sink.write(PropPayload.build(target, snap, limits, ++seq, owned()));
         snapshot = snap;
         lastApplied = target;
     }
@@ -120,9 +125,15 @@ public final class PerfStateMachine {
         return v.isEmpty() ? defaultTarget(limits) : v;
     }
 
+    /** Fields in effect now (only those are restored); nothing when not tuned. */
+    private Profile owned() {
+        return snapshot != null && lastApplied != null ? lastApplied : Profile.empty();
+    }
+
     private void restore() {
         if (snapshot == null) return;
-        sink.write(PropPayload.build(Profile.empty(), snapshot, limitsSupplier.get(), ++seq));
+        sink.write(PropPayload.build(Profile.empty(), snapshot, limitsSupplier.get(), ++seq,
+                owned()));
         snapshot = null;
         lastApplied = null;
     }

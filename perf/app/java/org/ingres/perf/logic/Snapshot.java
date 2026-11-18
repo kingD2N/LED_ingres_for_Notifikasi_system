@@ -48,4 +48,24 @@ public final class Snapshot {
     public String governor(int cluster) { return values.governor(cluster); }
     public long gpuMinHz() { return values.gpuMinHz(); }
     public long gpuMaxHz() { return values.gpuMaxHz(); }
+
+    /** The captured values as a Profile (for persisting with {@link ProfileCodec}). */
+    public Profile values() { return values; }
+
+    /**
+     * False when a node the kernel advertises could not be read: for a cluster with a known
+     * frequency list min or max is 0, or its governor is missing while a governor list is
+     * known; same for the GPU (min/max) when its frequency list is known. Tuning with such a
+     * snapshot would leave nothing to restore, so callers abort instead. Null limits = usable.
+     */
+    public boolean isUsableFor(Limits limits) {
+        if (limits == null) return true;
+        for (int c = 0; c < Profile.CLUSTERS; c++) {
+            boolean known = limits.cpuFreqsKhz(c).length > 0;
+            if (known && (minKhz(c) == 0 || maxKhz(c) == 0)) return false;
+            String g = governor(c);
+            if (limits.cpuGovernors(c).length > 0 && (g == null || g.isEmpty())) return false;
+        }
+        return limits.gpuFreqsHz().length == 0 || (gpuMinHz() > 0 && gpuMaxHz() > 0);
+    }
 }

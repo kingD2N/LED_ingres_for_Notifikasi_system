@@ -3,3 +3,11 @@
 system_internal_prop(ingres_perf_prop)
 
 set_prop(platform_app, ingres_perf_prop)
+
+# rc di system_ext berjalan di domain init (bukan vendor_init); AOSP tidak
+# mengizinkan init menulis sysfs cpufreq, jadi izinkan khusus node CPU.
+allow init sysfs_devices_system_cpu:file w_file_perms;
+
+# Node GPU (kgsl) sengaja belum diberi aturan: tipe/label vendornya belum
+# dipastikan, dan aturan dengan tipe yang tidak ada merusak build sepolicy ROM.
+# Diputuskan di checkpoint di HP.

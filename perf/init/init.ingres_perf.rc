@@ -1,7 +1,10 @@
 # Kontrol CPU/GPU per aplikasi (app IngresPerf).
-# App mengisi semua properti sys.ingres.perf.* dari snapshot, lalu menaikkan
-# sys.ingres.perf.apply sebagai pemicu terakhir. Properti kosong membuat write
-# gagal tanpa efek (hanya tercatat di log init); app selalu mengisi semua kolom.
+# App mengisi properti sys.ingres.perf.* lalu menaikkan sys.ingres.perf.apply
+# sebagai pemicu terakhir. Hanya kolom milik profil yang diisi (nilai profil, atau
+# nilai snapshot untuk kolom yang perlu dipulihkan); kolom lain sengaja kosong.
+# Properti kosong = node itu dilewati: write gagal tanpa efek (hanya tercatat di
+# log init), jadi nilai boost/thermal/Kernel Manager di node itu tidak ditimpa.
+# <node>_floor hanya diisi bila min node itu juga diisi.
 #
 # Urutan penting karena kernel menolak min > max:
 #   1) governor CPU, 2) <node>_floor -> min, 3) max -> max, 4) min target -> min.
