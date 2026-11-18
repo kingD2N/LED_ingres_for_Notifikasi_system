@@ -39,6 +39,13 @@ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-private
 ifeq ($(INGRES_ADDONS_A17),true)
 SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-private-a17
 endif
+# Node GPU kgsl (tipe vendor): hanya dipasang bila tipenya didefinisikan di source,
+# karena aturan dengan tipe yang tidak ada merusak build sepolicy vendor.
+INGRES_ADDONS_KGSL_DIRS := $(wildcard device/qcom device/xiaomi hardware/qcom-caf)
+INGRES_ADDONS_KGSL_TYPE := $(if $(INGRES_ADDONS_KGSL_DIRS),$(shell grep -rqs --include=*.te -e '^type vendor_sysfs_kgsl' $(INGRES_ADDONS_KGSL_DIRS) && echo true))
+ifeq ($(INGRES_ADDONS_KGSL_TYPE),true)
+BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-vendor
+endif
 endif
 
 ifeq ($(INGRES_ADDONS_MIUICAMERA),true)

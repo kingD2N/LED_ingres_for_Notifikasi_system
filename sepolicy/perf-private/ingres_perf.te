@@ -8,6 +8,4 @@ set_prop(platform_app, ingres_perf_prop)
 # mengizinkan init menulis sysfs cpufreq, jadi izinkan khusus node CPU.
 allow init sysfs_devices_system_cpu:file w_file_perms;
 
-# Node GPU (kgsl) sengaja belum diberi aturan: tipe/label vendornya belum
-# dipastikan, dan aturan dengan tipe yang tidak ada merusak build sepolicy ROM.
-# Diputuskan di checkpoint di HP.
+# Node GPU (kgsl): aturannya ada di sepolicy/perf-vendor (tipe vendor_sysfs_kgsl).

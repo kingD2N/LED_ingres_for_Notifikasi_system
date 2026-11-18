@@ -63,8 +63,13 @@ ls -Z /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq /sys/class/kgsl/k
 ```
 
 Bila `init` ditolak SELinux (avc), minta rencana cadangan (daemon native seperti HAL LED).
-GPU: aturan sepolicy vendor untuk node kgsl belum ada, jadi min/max GPU baru aktif setelah
-label node dipastikan lewat `ls -Z`; bagian GPU di UI disembunyikan bila daftar frekuensi tak terbaca.
+GPU: label node kgsl di ingres adalah `vendor_sysfs_kgsl`; aturan tulis untuk `init` ada di
+`sepolicy/perf-vendor` dan dipasang otomatis bila tipenya ada di source. Bagian GPU di UI
+disembunyikan bila daftar frekuensi tak terbaca oleh app.
+
+Modul tuning lain yang menulis `scaling_max_freq`/governor berkala (mis. loop `while true; do sleep 5`
+di `service.sh` modul KernelSU) menimpa profil dalam hitungan detik. Matikan bagian CPU modul itu
+selama profil per aplikasi dipakai.
 
 ## Debloat
 

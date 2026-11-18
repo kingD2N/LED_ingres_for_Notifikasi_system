@@ -1,0 +1,6 @@
+# Node GPU (kgsl): rc IngresPerf (system_ext) berjalan di domain init dan menulis
+# /sys/class/kgsl/kgsl-3d0/devfreq/{min,max}_freq. Label node di ingres (dicek lewat
+# ls -Z) adalah vendor_sysfs_kgsl. Dipasang hanya bila tipenya ada di source
+# (lihat INGRES_ADDONS_KGSL_TYPE di BoardConfigAddons.mk).
+allow init vendor_sysfs_kgsl:file w_file_perms;
+allow init vendor_sysfs_kgsl:dir r_dir_perms;
