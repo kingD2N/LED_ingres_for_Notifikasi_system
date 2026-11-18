@@ -45,6 +45,9 @@ INGRES_ADDONS_KGSL_DIRS := $(wildcard device/qcom device/xiaomi hardware/qcom-ca
 INGRES_ADDONS_KGSL_TYPE := $(if $(INGRES_ADDONS_KGSL_DIRS),$(shell grep -rqs --include=*.te -e '^type vendor_sysfs_kgsl' $(INGRES_ADDONS_KGSL_DIRS) && echo true))
 ifeq ($(INGRES_ADDONS_KGSL_TYPE),true)
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-vendor
+ifeq ($(INGRES_ADDONS_A17),true)
+BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-vendor-a17
+endif
 endif
 endif
 

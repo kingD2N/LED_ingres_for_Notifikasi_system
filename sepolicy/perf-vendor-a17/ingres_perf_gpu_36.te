@@ -1,0 +1,5 @@
+# Android 17: app IngresPerf (target SDK < 37) berjalan sebagai platform_app_36
+# (tipe publik, boleh dirujuk dari sepolicy vendor). Hanya dipasang di Android 17.
+allow platform_app_36 vendor_sysfs_kgsl:file r_file_perms;
+allow platform_app_36 vendor_sysfs_kgsl:dir r_dir_perms;
+allow platform_app_36 vendor_sysfs_kgsl:lnk_file r_file_perms;
