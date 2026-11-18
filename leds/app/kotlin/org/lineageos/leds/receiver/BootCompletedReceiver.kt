@@ -7,10 +7,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.lineageos.leds.Application
 import org.lineageos.leds.proto.settings
+import org.lineageos.leds.service.ListenerAccess
 
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(p0: Context?, p1: Intent?) {
         p1?.action // suppress warning
+
+        p0?.let { ListenerAccess.ensure(it) }
 
         val data = runBlocking { Application.INSTANCE.settings.data.first() }
 
