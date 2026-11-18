@@ -42,7 +42,31 @@ class ProfileStore(ctx: Context) {
             }
         }
 
-    /** Menghapus semua profil dan mengembalikan sakelar utama ke aktif. */
+    /**
+     * Snapshot nilai dasar (ProfileCodec) selama sesi tersetel, supaya proses yang mulai
+     * ulang tidak mengambil nilai yang sedang disetel sebagai nilai dasar.
+     */
+    fun saveSnapshot(encoded: String): Boolean {
+        val ok = prefs.edit().putString(KEY_SNAPSHOT, encoded).commit()
+        if (!ok) Log.e(TAG, "Gagal menyimpan snapshot")
+        return ok
+    }
+
+    fun loadSnapshot(): String? =
+        try {
+            prefs.getString(KEY_SNAPSHOT, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Gagal membaca snapshot", e)
+            null
+        }
+
+    fun clearSnapshot() {
+        // Dipanggil sesudah tiap peristiwa: tulis ke disk hanya bila memang ada.
+        if (!prefs.contains(KEY_SNAPSHOT)) return
+        if (!prefs.edit().remove(KEY_SNAPSHOT).commit()) Log.e(TAG, "Gagal menghapus snapshot")
+    }
+
+    /** Menghapus semua profil (dan snapshot) dan mengembalikan sakelar utama ke aktif. */
     fun resetAll(): Boolean {
         val ok = prefs.edit().clear().commit()
         if (!ok) Log.e(TAG, "Gagal reset")
@@ -54,5 +78,6 @@ class ProfileStore(ctx: Context) {
         const val PREFS = "perf"
         const val KEY_PROFILES = "profiles"
         const val KEY_ENABLED = "enabled"
+        const val KEY_SNAPSHOT = "snapshot"
     }
 }

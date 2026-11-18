@@ -18,7 +18,8 @@ import org.ingres.perf.logic.Scheduler
  * Proses persistent IngresPerf. Merangkai:
  * ProfileStore -> PerfStateMachine -> PropSink (di PerfController),
  * ForegroundWatcher -> Debouncer(300 ms, Handler utama) -> onForeground,
- * LOCKED_BOOT_COMPLETED / BOOT_COMPLETED (BootCompletedReceiver) -> onBootCompleted.
+ * LOCKED_BOOT_COMPLETED / BOOT_COMPLETED (BootCompletedReceiver) -> onBootCompleted,
+ * ditunda BOOT_SETTLE_MS (satu panggilan tertunda saja).
  *
  * Semua panggilan ke state machine terjadi di thread utama.
  */
@@ -33,6 +34,7 @@ class PerfApplication : Application() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scheduler = HandlerScheduler(mainHandler)
     private var watcher: ForegroundWatcher? = null
+    private val bootToken = Any()
 
     override fun onCreate() {
         super.onCreate()
@@ -69,13 +71,26 @@ class PerfApplication : Application() {
 
         // Proses dimulai ulang sesudah boot: broadcast boot tidak datang lagi.
         if (SystemProperties.get(PROP_BOOT_COMPLETED) == "1") {
-            mainHandler.post { controller.onBootCompleted() }
+            scheduleBootCompleted(controller)
         }
     }
 
     /** Dipanggil BootCompletedReceiver (thread utama). Idempoten. */
     fun onBootCompleted() {
-        if (isReady) perf.onBootCompleted()
+        if (isReady) scheduleBootCompleted(perf)
+    }
+
+    /**
+     * Menunda onBootCompleted supaya tulisan boot vendor/KSU/Kernel Manager selesai dulu.
+     * Dijadwalkan ulang = jadwal lama dibatalkan, jadi hanya satu panggilan tertunda.
+     */
+    private fun scheduleBootCompleted(controller: PerfController) {
+        mainHandler.removeCallbacksAndMessages(bootToken)
+        mainHandler.postDelayed(
+            Runnable { controller.onBootCompleted() },
+            bootToken,
+            BOOT_SETTLE_MS,
+        )
     }
 
     /** Scheduler Debouncer di atas Handler utama; token membuat cancel() hanya membuang miliknya. */
@@ -94,6 +109,9 @@ class PerfApplication : Application() {
     private companion object {
         const val TAG = "IngresPerf"
         const val DEBOUNCE_MS = 300L
+        // Jeda sesudah boot selesai sebelum profil Default diterapkan: memberi waktu skrip
+        // post-boot vendor, modul KSU, dan Kernel Manager menulis nilainya lebih dulu.
+        const val BOOT_SETTLE_MS = 20_000L
         const val PROP_BOOT_COMPLETED = "sys.boot_completed"
     }
 }

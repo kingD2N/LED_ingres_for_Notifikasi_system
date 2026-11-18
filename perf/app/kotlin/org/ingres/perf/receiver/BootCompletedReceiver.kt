@@ -11,7 +11,10 @@ import android.content.Intent
 import android.util.Log
 import org.ingres.perf.PerfApplication
 
-/** Boot selesai (sebelum dan sesudah unlock): terapkan profil Default. Idempoten. */
+/**
+ * Boot selesai (sebelum dan sesudah unlock): jadwalkan profil Default (ditunda, hanya satu
+ * panggilan tertunda). Idempoten.
+ */
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent?.action) {
