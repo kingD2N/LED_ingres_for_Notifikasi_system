@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: 2026 kingD2N
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- Entri Setelan -->
+    <string name="perf_settings_title">CPU/GPU per Aplikasi</string>
+    <string name="perf_settings_summary">Frekuensi CPU, GPU, dan governor tiap aplikasi</string>
+
+    <!-- Daftar -->
+    <string name="master_switch_title">Aktifkan</string>
+    <string name="master_switch_summary">Terapkan profil saat aplikasi dibuka</string>
+    <string name="default_title">Default</string>
+    <string name="default_summary">Profil dasar, diterapkan setelah boot dan saat aplikasi yang dibuka tidak punya profil sendiri</string>
+    <string name="search_hint">Cari aplikasi</string>
+    <string name="clear_search">Hapus pencarian</string>
+    <string name="apps_loading">Memuat aplikasi…</string>
+    <string name="apps_empty">Aplikasi tidak ditemukan</string>
+    <string name="not_ready">Layanan CPU/GPU tidak berjalan. Mulai ulang perangkat lalu coba lagi.</string>
+    <string name="save_failed">Profil gagal disimpan</string>
+
+    <!-- Reset semua -->
+    <string name="reset_all">Reset semua</string>
+    <string name="reset_all_confirm_title">Reset semua?</string>
+    <string name="reset_all_confirm_message">Semua profil, termasuk Default, akan dihapus dan nilai sistem dipulihkan. Sakelar Aktifkan dinyalakan lagi.</string>
+    <string name="reset">Reset</string>
+    <string name="cancel">Batal</string>
+
+    <!-- Detail -->
+    <string name="back">Kembali</string>
+    <string name="remove_profile">Hapus profil</string>
+    <string name="not_set">Tidak diatur</string>
+    <string name="not_set_hint">“Tidak diatur” = nilainya mengikuti sistem (modul atau Kernel Manager).</string>
+    <string name="limits_unavailable">Daftar frekuensi dan governor tidak bisa dibaca dari kernel.</string>
+    <string name="cluster_little">Cluster little (policy0)</string>
+    <string name="cluster_big">Cluster big (policy4)</string>
+    <string name="cluster_prime">Cluster prime (policy7)</string>
+    <string name="cluster_little_short">Little</string>
+    <string name="cluster_big_short">Big</string>
+    <string name="cluster_prime_short">Prime</string>
+    <string name="gpu_title">GPU</string>
+    <string name="min_freq">Frekuensi minimum</string>
+    <string name="max_freq">Frekuensi maksimum</string>
+    <string name="governor">Governor</string>
+
+    <!-- Format -->
+    <string name="freq_mhz">%1$s MHz</string>
+    <string name="freq_ghz">%1$s GHz</string>
+    <string name="range_min_max">%1$s–%2$s</string>
+    <string name="range_min_only">≥ %1$s</string>
+    <string name="range_max_only">≤ %1$s</string>
+    <string name="summary_item">%1$s %2$s</string>
+</resources>

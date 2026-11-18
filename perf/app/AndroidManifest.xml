@@ -9,7 +9,32 @@
     <application
         android:name=".PerfApplication"
         android:directBootAware="true"
-        android:persistent="true">
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/perf_settings_title"
+        android:persistent="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.IngresPerf">
+
+        <!-- Dibuka dari Setelan > Sistem saja (tanpa ikon di peluncur). -->
+        <activity
+            android:name=".ui.PerfActivity"
+            android:exported="true"
+            android:label="@string/perf_settings_title"
+            android:theme="@style/Theme.IngresPerf">
+            <intent-filter>
+                <action android:name="com.android.settings.action.EXTRA_SETTINGS" />
+            </intent-filter>
+            <meta-data
+                android:name="com.android.settings.category"
+                android:value="com.android.settings.category.ia.system" />
+            <meta-data
+                android:name="com.android.settings.summary"
+                android:resource="@string/perf_settings_summary" />
+            <meta-data
+                android:name="com.android.settings.order"
+                android:value="-255" />
+        </activity>
 
         <receiver
             android:name=".receiver.BootCompletedReceiver"

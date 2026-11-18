@@ -19,6 +19,17 @@ android_app {
     privileged: true,
     system_ext_specific: true,
     certificate: "platform",
-    // UI (Compose) menambah resource_dirs dan static_libs di sini.
+    resource_dirs: ["res"],
+    // UI Compose (ui/), pustaka sama dengan leds/app.
+    static_libs: [
+        "androidx.activity_activity-compose",
+        "androidx.compose.foundation_foundation",
+        "androidx.compose.ui_ui",
+        "androidx.compose.ui_ui-graphics",
+        "androidx.compose.material_material-icons-core",
+        "androidx.compose.material3_material3",
+        "androidx.compose.runtime_runtime",
+        "androidx.core_core-ktx",
+    ],
     required: ["init.ingres_perf.rc"],
 }
