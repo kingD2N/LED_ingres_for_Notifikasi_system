@@ -65,8 +65,9 @@ class PerfController(context: Context) {
     fun limits(): Limits {
         cachedLimits?.let { return it }
         val l = Limits.read(reader)
-        // Daftar frekuensi statis; simpan hanya bila CPU terbaca supaya gagal sesaat dicoba lagi.
-        if (l.cpuFreqsKhz(0).isNotEmpty()) cachedLimits = l
+        // Daftar frekuensi statis; simpan hanya bila CPU dan GPU terbaca supaya gagal sesaat
+        // (mis. node kgsl belum siap saat boot) dicoba lagi, bukan tersimpan kosong selamanya.
+        if (l.cpuFreqsKhz(0).isNotEmpty() && l.gpuFreqsHz().isNotEmpty()) cachedLimits = l
         return l
     }
 
