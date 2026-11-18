@@ -1,0 +1,5 @@
+# Properti sys.ingres.perf.*: app IngresPerf (platform_app) menulis, init membaca
+# lalu menulis sysfs CPU/GPU lewat on property:sys.ingres.perf.apply=*
+system_internal_prop(ingres_perf_prop)
+
+set_prop(platform_app, ingres_perf_prop)

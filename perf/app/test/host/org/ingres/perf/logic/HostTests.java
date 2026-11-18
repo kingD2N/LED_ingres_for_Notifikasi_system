@@ -1,5 +1,9 @@
 package org.ingres.perf.logic;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -548,6 +552,69 @@ public class HostTests {
         check("debouncerNullSubmitIgnored", got.equals(Arrays.asList("b")));
     }
 
+
+    /** Index of the first rc "write <node> ..." line for node (-1 if none), after fromIdx. */
+    static int writeIdx(List<String> lines, String node, String valueKey, int fromIdx) {
+        for (int i = Math.max(fromIdx, 0); i < lines.size(); i++) {
+            String[] w = lines.get(i).trim().split("\\s+");
+            if (w.length >= 3 && w[0].equals("write") && w[1].equals(node)
+                    && (valueKey == null || w[2].equals("${" + valueKey + "}"))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** Checks the init rc against PropPayload keys, PerfNodes paths and the write order. */
+    static void rcMatchesPayloadAndNodes(String rcPath) {
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get(rcPath), StandardCharsets.UTF_8);
+        } catch (IOException | RuntimeException e) {
+            check("rcReadable(" + rcPath + ")", false);
+            return;
+        }
+        int triggers = 0;
+        for (String l : lines) {
+            if (l.trim().equals("on property:" + PropPayload.APPLY + "=*")) triggers++;
+        }
+        check("rcHasExactlyOneApplyTrigger", triggers == 1);
+
+        StringBuilder writes = new StringBuilder();
+        for (String l : lines) {
+            if (l.trim().startsWith("write ")) writes.append(l).append('\n');
+        }
+        for (String key : PropPayload.keys()) {
+            if (key.equals(PropPayload.APPLY)) continue;
+            check("rcWritesKey " + key, writes.indexOf("${" + key + "}") >= 0);
+        }
+
+        String pre = PropPayload.PREFIX;
+        int[] policy = {0, 4, 7};
+        int lastGov = -1;
+        int firstFreq = Integer.MAX_VALUE;
+        for (int c = 0; c < 3; c++) {
+            String p = pre + "cpu" + policy[c] + "_";
+            int gov = writeIdx(lines, PerfNodes.cpuGov(c), p + "gov", 0);
+            check("rcWritesGov cpu" + policy[c], gov >= 0);
+            lastGov = Math.max(lastGov, gov);
+            int floor = writeIdx(lines, PerfNodes.cpuMin(c), p + "floor", 0);
+            int max = writeIdx(lines, PerfNodes.cpuMax(c), p + "max", 0);
+            int min = writeIdx(lines, PerfNodes.cpuMin(c), p + "min", 0);
+            check("rcOrder cpu" + policy[c] + " floor<max<min",
+                    floor >= 0 && max > floor && min > max);
+            if (floor >= 0) firstFreq = Math.min(firstFreq, floor);
+            if (max >= 0) firstFreq = Math.min(firstFreq, max);
+            if (min >= 0) firstFreq = Math.min(firstFreq, min);
+        }
+        int gfloor = writeIdx(lines, PerfNodes.GPU_MIN, pre + "gpu_floor", 0);
+        int gmax = writeIdx(lines, PerfNodes.GPU_MAX, pre + "gpu_max", 0);
+        int gmin = writeIdx(lines, PerfNodes.GPU_MIN, pre + "gpu_min", 0);
+        check("rcOrder gpu floor<max<min", gfloor >= 0 && gmax > gfloor && gmin > gmax);
+        if (gfloor >= 0) firstFreq = Math.min(firstFreq, gfloor);
+        check("rcGovernorsBeforeAllFreqWrites", lastGov >= 0 && lastGov < firstFreq);
+    }
+
     public static void main(String[] args) {
         codecRoundTrip();
         codecGarbageGivesEmpty();
@@ -575,6 +642,7 @@ public class HostTests {
         smDropsUninstalledPackages();
         debouncerLastWins();
         debouncerStaleRunnableNeverDeliversNullOrDuplicate();
+        if (args.length > 0) rcMatchesPayloadAndNodes(args[0]);
         if (failed > 0) {
             System.out.println(failed + " FAILED of " + total);
             System.exit(1);

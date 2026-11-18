@@ -11,6 +11,7 @@ INGRES_ADDONS_ROM ?= los
 
 INGRES_ADDONS_GAMEKEYS ?= true
 INGRES_ADDONS_LEDS ?= true
+INGRES_ADDONS_PERF ?= true
 INGRES_ADDONS_JAMESDSP ?= true
 INGRES_ADDONS_MIUICAMERA ?= true
 
@@ -30,6 +31,14 @@ endif
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/vendor
 else ifeq ($(INGRES_ADDONS_JAMESDSP),true)
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/vendor
+endif
+
+# Perf: properti sys.ingres.perf.* (app IngresPerf -> init rc)
+ifeq ($(INGRES_ADDONS_PERF),true)
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-private
+ifeq ($(INGRES_ADDONS_A17),true)
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-private-a17
+endif
 endif
 
 ifeq ($(INGRES_ADDONS_MIUICAMERA),true)

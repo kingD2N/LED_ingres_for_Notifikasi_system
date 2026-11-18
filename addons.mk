@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Paket tambahan ROM POCO F4 GT (ingres):
-#   GameKeys, LED (app Leds + lampu status), Dolby Lunaris, JamesDSP, MIUI Camera,
+#   GameKeys, LED (app Leds + lampu status), Perf (CPU/GPU per aplikasi), Dolby Lunaris, JamesDSP, MIUI Camera,
 #   dan debloat aplikasi yang aman dibuang (debloat/Android.bp).
 #
 # Pakai dari device.mk:
@@ -18,6 +18,7 @@ INGRES_ADDONS_ROM ?= los
 
 INGRES_ADDONS_GAMEKEYS ?= true
 INGRES_ADDONS_LEDS ?= true
+INGRES_ADDONS_PERF ?= true
 INGRES_ADDONS_DOLBY ?= true
 INGRES_ADDONS_JAMESDSP ?= true
 INGRES_ADDONS_MIUICAMERA ?= true
@@ -37,6 +38,13 @@ PRODUCT_PACKAGES += \
     IngresLeds \
     IngresAddonsFrameworksOverlay \
     vendor.lineage.leds-service.ingres
+endif
+
+# Perf: kontrol CPU/GPU per aplikasi (app IngresPerf + init rc penulis sysfs)
+ifeq ($(INGRES_ADDONS_PERF),true)
+PRODUCT_PACKAGES += \
+    IngresPerf \
+    init.ingres_perf.rc
 endif
 
 # Dolby Lunaris
