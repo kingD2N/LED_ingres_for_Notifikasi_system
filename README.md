@@ -26,7 +26,7 @@ INGRES_ADDONS_ROM := los      # atau aospa
 -include vendor/ingres/addons/BoardConfigAddons.mk
 ```
 
-Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT := false`.
+Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT / _PERF := false`.
 
 ## LED
 
@@ -36,6 +36,35 @@ Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUI
   baterai penuh = efek 15, charging = hijau, baterai lemah (≤15%) = efek 8,
   notifikasi saat layar mati = efek 2. Bisa dimatikan dari app Leds ("Lampu status").
   Efek pilihan di app dipasang lagi setelah lampu status selesai.
+
+## CPU/GPU per aplikasi
+
+App `IngresPerf` (`perf/`) menambah entri **CPU/GPU per Aplikasi** di Setelan > Sistem: frekuensi
+min/max tiap cluster CPU (little/big/prime), governor CPU, dan min/max GPU, per aplikasi. Entri
+**Default** dipakai setelah boot dan saat aplikasi di depan tidak punya profil. Profil tersimpan
+permanen (storage device-protected), ada sakelar utama dan "Reset semua".
+
+- Alur: app menyimpan profil, lalu mengisi property `sys.ingres.perf.*` dan terakhir
+  `sys.ingres.perf.apply`; `init` (`perf/init/init.ingres_perf.rc`) yang menulis node sysfs.
+- Hanya field yang diatur profil yang ditulis (kolom kosong dilewati, `init` mencatat error
+  harmless di kmsg). Nilai hanya dari daftar kernel; urutan tulis governor, lantai, max, min.
+- Nilai dasar (snapshot) diambil sebelum profil diterapkan dan dipulihkan saat keluar.
+  Default diterapkan ~20 detik setelah boot selesai (menghindari tabrakan skrip boot vendor).
+- Matikan: `INGRES_ADDONS_PERF := false` di `device.mk`. Hapus semua profil lewat "Reset semua".
+- Penyimpanan memakai SharedPreferences device-protected (bukan DataStore).
+
+Titik periksa di HP (setelah build pertama), terminal root:
+
+```
+setprop sys.ingres.perf.cpu0_max <nilai valid>; setprop sys.ingres.perf.apply 1
+cat /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+dmesg | grep avc | grep -e init -e perf
+ls -Z /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq /sys/class/kgsl/kgsl-3d0/devfreq/max_freq
+```
+
+Bila `init` ditolak SELinux (avc), minta rencana cadangan (daemon native seperti HAL LED).
+GPU: aturan sepolicy vendor untuk node kgsl belum ada, jadi min/max GPU baru aktif setelah
+label node dipastikan lewat `ls -Z`; bagian GPU di UI disembunyikan bila daftar frekuensi tak terbaca.
 
 ## Debloat
 
