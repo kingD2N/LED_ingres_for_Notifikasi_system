@@ -4,7 +4,7 @@
 #
 # Paket tambahan ROM POCO F4 GT (ingres):
 #   GameKeys, LED (app Leds + lampu status), Perf (CPU/GPU per aplikasi), Dolby Lunaris, JamesDSP, MIUI Camera,
-#   dan debloat aplikasi yang aman dibuang (debloat/Android.bp).
+#   konfigurasi layar HDR (displayconfig), dan debloat aplikasi yang aman dibuang (debloat/Android.bp).
 #
 # Pakai dari device.mk:
 #   INGRES_ADDONS_ROM := los      # LineageOS / Lunaris (dan turunan LineageOS)
@@ -23,6 +23,7 @@ INGRES_ADDONS_DOLBY ?= true
 INGRES_ADDONS_JAMESDSP ?= true
 INGRES_ADDONS_MIUICAMERA ?= true
 INGRES_ADDONS_DEBLOAT ?= true
+INGRES_ADDONS_HDR ?= true
 
 PRODUCT_SOONG_NAMESPACES += \
     $(INGRES_ADDONS_PATH)
@@ -84,4 +85,14 @@ endif
 ifeq ($(INGRES_ADDONS_DEBLOAT),true)
 PRODUCT_PACKAGES += \
     IngresDebloat
+endif
+
+# HDR: konfigurasi layar Xiaomi (HBM + boost HDR sampai 800 nit, rasio SDR->HDR 2.25x).
+# Blob vendor menamainya display_id_...170 (ID layar di ROM stock), tetapi di ROM custom
+# ID layar ingres ...169 (port 129), sehingga file tidak terbaca dan video HDR tidak
+# otomatis terang. Dipasang juga dengan ID/port yang dipakai ROM custom (diuji 25/11/2026).
+ifeq ($(INGRES_ADDONS_HDR),true)
+PRODUCT_COPY_FILES += \
+    $(INGRES_ADDONS_PATH)/displayconfig/display_ingres.xml:$(TARGET_COPY_OUT_VENDOR)/etc/displayconfig/display_id_4630946545580055169.xml \
+    $(INGRES_ADDONS_PATH)/displayconfig/display_ingres.xml:$(TARGET_COPY_OUT_VENDOR)/etc/displayconfig/display_port_129.xml
 endif
