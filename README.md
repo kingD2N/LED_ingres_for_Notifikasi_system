@@ -26,6 +26,8 @@ INGRES_ADDONS_ROM := los      # atau aospa
 -include vendor/ingres/addons/BoardConfigAddons.mk
 ```
 
+JamesDSP **mati bawaan** sejak 26 Nov 2026 (bentrok dengan suara video Dolby Vision); nyalakan dengan `INGRES_ADDONS_JAMESDSP := true`.
+
 Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT / _PERF := false`.
 
 ## LED

@@ -20,7 +20,7 @@ INGRES_ADDONS_GAMEKEYS ?= true
 INGRES_ADDONS_LEDS ?= true
 INGRES_ADDONS_PERF ?= true
 INGRES_ADDONS_DOLBY ?= true
-INGRES_ADDONS_JAMESDSP ?= true
+INGRES_ADDONS_JAMESDSP ?= false
 INGRES_ADDONS_MIUICAMERA ?= true
 INGRES_ADDONS_DEBLOAT ?= true
 INGRES_ADDONS_HDR ?= true
@@ -62,6 +62,8 @@ endif
 endif
 
 # JamesDSP (efek audio legacy, cocok dengan audio HAL HIDL ingres)
+# Mati bawaan (26/11/2026): efek per-aplikasi JamesDSP membungkam suara video Dolby Vision.
+# Nyalakan lagi dengan INGRES_ADDONS_JAMESDSP := true di device.mk dan BoardConfig.mk.
 ifeq ($(INGRES_ADDONS_JAMESDSP),true)
 $(call inherit-product-if-exists, vendor/JamesDSP/config.mk)
 endif
