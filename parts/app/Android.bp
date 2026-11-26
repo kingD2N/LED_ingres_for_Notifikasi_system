@@ -1,0 +1,36 @@
+//
+// SPDX-FileCopyrightText: 2026 kingD2N
+// SPDX-License-Identifier: Apache-2.0
+//
+// App IngresParts: batas cas, bypass, profil thermal, mode game (sentuhan, overlay FPS),
+// mode warna Flat, pembersih speaker, dan pintasan fitur ingres lain. Logika murni di
+// java/ (diuji di host), perekat Android di kotlin/. Menulis sys.ingres.parts.*,
+// init.ingres_parts.rc yang menulis sysfs.
+//
+
+android_app {
+    name: "IngresParts",
+    package_name: "org.ingres.parts",
+    manifest: "AndroidManifest.xml",
+    srcs: [
+        "kotlin/**/*.kt",
+        "java/**/*.java",
+    ],
+    platform_apis: true,
+    privileged: true,
+    system_ext_specific: true,
+    certificate: "platform",
+    resource_dirs: ["res"],
+    // UI Compose (ui/), pustaka sama dengan perf/app.
+    static_libs: [
+        "androidx.activity_activity-compose",
+        "androidx.compose.foundation_foundation",
+        "androidx.compose.ui_ui",
+        "androidx.compose.ui_ui-graphics",
+        "androidx.compose.material_material-icons-core",
+        "androidx.compose.material3_material3",
+        "androidx.compose.runtime_runtime",
+        "androidx.core_core-ktx",
+    ],
+    required: ["init.ingres_parts.rc"],
+}

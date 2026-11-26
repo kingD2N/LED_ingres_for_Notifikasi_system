@@ -1,0 +1,33 @@
+# Ingres Parts (app IngresParts). App mengisi properti sys.ingres.parts.*, init yang
+# menulis node sysfs (domain init, aturan di sepolicy/parts-*). Nilai sudah divalidasi app.
+
+on boot
+    # Pengaman: cas selalu normal setiap boot. Kalau app bermasalah, HP tidak pernah
+    # terkunci dalam keadaan tidak bisa dicas.
+    write /sys/class/qcom-battery/input_suspend 0
+    write /sys/class/qcom-battery/night_charging 0
+
+# Batas cas kustom: 1 = putus input charger (baterai berhenti diisi)
+on property:sys.ingres.parts.input_suspend=*
+    write /sys/class/qcom-battery/input_suspend ${sys.ingres.parts.input_suspend}
+
+# Optimal 80%: firmware menahan baterai di 80%
+on property:sys.ingres.parts.night_charging=*
+    write /sys/class/qcom-battery/night_charging ${sys.ingres.parts.night_charging}
+
+# Bypass: arus cas (uA). 0 = HP memakai daya charger tanpa mengisi baterai.
+on property:sys.ingres.parts.fcc=*
+    write /sys/class/power_supply/battery/constant_charge_current ${sys.ingres.parts.fcc}
+
+# Profil thermal mi_thermald (thermal-map.conf): 0 normal, 10 nolimits, 11 class0, 13 tgame, 20 mgame
+on property:sys.ingres.parts.sconfig=*
+    write /sys/devices/virtual/thermal/thermal_message/sconfig ${sys.ingres.parts.sconfig}
+
+# Sentuhan responsif saat game (laju sampling sentuh tinggi)
+on property:sys.ingres.parts.touch_boost=*
+    write /sys/devices/virtual/touch/touch_dev/bump_sample_rate ${sys.ingres.parts.touch_boost}
+
+# Mode warna Flat: disp_param "<id fitur> <nilai>", DISP_FEATURE_FLAT_MODE = 6.
+# Dipicu flat_apply supaya bisa ditulis ulang dengan nilai yang sama (setelah layar menyala).
+on property:sys.ingres.parts.flat_apply=*
+    write /sys/devices/virtual/mi_display/disp_feature/disp-DSI-0/disp_param "6 ${sys.ingres.parts.flat}"

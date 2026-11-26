@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Paket tambahan ROM POCO F4 GT (ingres):
-#   GameKeys, LED (app Leds + lampu status), Perf (CPU/GPU per aplikasi), Dolby Lunaris, JamesDSP, MIUI Camera,
-#   konfigurasi layar HDR (displayconfig), dan debloat aplikasi yang aman dibuang (debloat/Android.bp).
+#   GameKeys, LED (app Leds + lampu status), Perf (CPU/GPU per aplikasi), Parts (pengaturan ingres),
+#   Dolby Lunaris, JamesDSP, MIUI Camera, konfigurasi layar HDR (displayconfig), dan debloat aplikasi
+#   yang aman dibuang (debloat/Android.bp).
 #
 # Pakai dari device.mk:
 #   INGRES_ADDONS_ROM := los      # LineageOS / Lunaris (dan turunan LineageOS)
@@ -19,6 +20,7 @@ INGRES_ADDONS_ROM ?= los
 INGRES_ADDONS_GAMEKEYS ?= true
 INGRES_ADDONS_LEDS ?= true
 INGRES_ADDONS_PERF ?= true
+INGRES_ADDONS_PARTS ?= false
 INGRES_ADDONS_DOLBY ?= true
 INGRES_ADDONS_JAMESDSP ?= false
 INGRES_ADDONS_MIUICAMERA ?= true
@@ -46,6 +48,14 @@ ifeq ($(INGRES_ADDONS_PERF),true)
 PRODUCT_PACKAGES += \
     IngresPerf \
     init.ingres_perf.rc
+endif
+
+# Parts: pengaturan ingres (batas cas, bypass, profil thermal, mode game, Flat, pembersih speaker).
+# Masih uji coba, mati bawaan. Nyalakan dengan INGRES_ADDONS_PARTS := true di device.mk dan BoardConfig.mk.
+ifeq ($(INGRES_ADDONS_PARTS),true)
+PRODUCT_PACKAGES += \
+    IngresParts \
+    init.ingres_parts.rc
 endif
 
 # Dolby Lunaris

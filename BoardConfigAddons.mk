@@ -12,6 +12,7 @@ INGRES_ADDONS_ROM ?= los
 INGRES_ADDONS_GAMEKEYS ?= true
 INGRES_ADDONS_LEDS ?= true
 INGRES_ADDONS_PERF ?= true
+INGRES_ADDONS_PARTS ?= false
 INGRES_ADDONS_JAMESDSP ?= false
 INGRES_ADDONS_MIUICAMERA ?= true
 
@@ -48,6 +49,29 @@ BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-vendor
 ifeq ($(INGRES_ADDONS_A17),true)
 BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/perf-vendor-a17
 endif
+endif
+endif
+
+# Parts: properti sys.ingres.parts.* (app IngresParts -> init rc)
+ifeq ($(INGRES_ADDONS_PARTS),true)
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/parts-private
+ifeq ($(INGRES_ADDONS_A17),true)
+SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/parts-private-a17
+endif
+# Node baterai, sentuh, layar dan FPS (tipe vendor): dipasang hanya bila keempat tipenya
+# didefinisikan di source, karena aturan dengan tipe yang tidak ada merusak build sepolicy vendor.
+INGRES_ADDONS_PARTS_DIRS := $(wildcard device/qcom device/xiaomi hardware/qcom-caf)
+INGRES_ADDONS_PARTS_TYPES := $(if $(INGRES_ADDONS_PARTS_DIRS),$(shell n=0; \
+    for t in vendor_sysfs_battery_supply vendor_sysfs_touch vendor_sysfs_displayfeature vendor_sysfs_graphics; do \
+        grep -rqsE --include=*.te "^type[[:space:]]+$$t[[:space:],;]" $(INGRES_ADDONS_PARTS_DIRS) && n=$$((n+1)); \
+    done; [ $$n -eq 4 ] && echo true))
+ifeq ($(INGRES_ADDONS_PARTS_TYPES),true)
+BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/parts-vendor
+ifeq ($(INGRES_ADDONS_A17),true)
+BOARD_VENDOR_SEPOLICY_DIRS += $(INGRES_ADDONS_PATH)/sepolicy/parts-vendor-a17
+endif
+else
+$(warning IngresParts: tipe sepolicy vendor baterai/sentuh/layar tidak lengkap, aturan parts-vendor dilewati)
 endif
 endif
 

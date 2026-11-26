@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: 2026 kingD2N
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="settings_summary">Baterai, thermal, mode game, layar</string>
+    <string name="not_ready">Layanan Ingres Parts tidak berjalan. Mulai ulang perangkat lalu coba lagi.</string>
+
+    <string name="section_battery">Baterai &amp; pengisian</string>
+    <string name="charge_normal">Normal</string>
+    <string name="charge_normal_desc">Cas sampai 100%</string>
+    <string name="charge_optimal">Optimal 80%</string>
+    <string name="charge_optimal_desc">Firmware HP menahan baterai di 80%</string>
+    <string name="charge_limit">Batas kustom</string>
+    <string name="charge_limit_desc">Berhenti di %1$d%%, lanjut lagi di %2$d%%</string>
+    <string name="battery_status">Baterai %1$d%% · %2$s</string>
+    <string name="status_charging">mengisi</string>
+    <string name="status_held">ditahan batas</string>
+    <string name="status_bypass">bypass, memakai daya charger</string>
+    <string name="status_unplugged">tidak dicas</string>
+    <string name="bypass_title">Bypass charging (eksperimen)</string>
+    <string name="bypass_desc">Saat dicas, HP memakai daya charger tanpa mengisi baterai, jadi baterai lebih dingin</string>
+    <string name="bypass_game_only">Hanya saat main game</string>
+
+    <string name="section_thermal">Profil thermal</string>
+    <string name="thermal_hemat">Hemat</string>
+    <string name="thermal_hemat_desc">Suhu paling rendah, CPU dan GPU dibatasi sejak awal</string>
+    <string name="thermal_harian">Harian</string>
+    <string name="thermal_harian_desc">Profil harian MIUI</string>
+    <string name="thermal_seimbang">Seimbang (bawaan ROM)</string>
+    <string name="thermal_seimbang_desc">Profil game yang dipakai ROM sesudah boot</string>
+    <string name="thermal_gaming">Gaming</string>
+    <string name="thermal_gaming_desc">CPU kecepatan penuh sampai suhu lebih tinggi</string>
+    <string name="thermal_performa">Performa</string>
+    <string name="thermal_performa_desc">Hampir tanpa batas sampai 51°C, lalu dipotong keras. HP jadi panas</string>
+
+    <string name="section_game">Mode game</string>
+    <string name="game_list">Daftar game</string>
+    <string name="game_list_count">%1$d aplikasi dipilih</string>
+    <string name="game_thermal">Thermal saat main game</string>
+    <string name="game_thermal_follow">Sama dengan profil thermal</string>
+    <string name="game_touch">Sentuhan responsif</string>
+    <string name="game_touch_desc">Laju sampling sentuh lebih tinggi saat game dibuka</string>
+    <string name="game_overlay">Overlay FPS &amp; suhu</string>
+    <string name="game_overlay_desc">Menampilkan FPS, suhu CPU, dan suhu baterai saat game dibuka</string>
+    <string name="overlay_preview">Coba tampilkan</string>
+    <string name="overlay_hide">Sembunyikan</string>
+
+    <string name="section_display">Layar</string>
+    <string name="flat_title">Mode warna Flat (eksperimen)</string>
+    <string name="flat_desc">Gamma panel flat untuk warna lebih akurat</string>
+
+    <string name="section_speaker">Speaker</string>
+    <string name="clean_title">Bersihkan speaker</string>
+    <string name="clean_desc">Memutar nada 165 Hz selama 30 detik lewat speaker HP untuk mendorong air dan debu keluar. Hadapkan speaker ke bawah.</string>
+    <string name="clean_start">Mulai</string>
+    <string name="clean_stop">Hentikan</string>
+
+    <string name="section_more">Fitur lain</string>
+    <string name="link_leds">Lampu LED</string>
+    <string name="link_perf">CPU/GPU per Aplikasi</string>
+    <string name="link_gamekeys">Tombol bahu</string>
+    <string name="link_dolby">Dolby Atmos</string>
+
+    <string name="picker_title">Pilih game</string>
+    <string name="search_hint">Cari aplikasi</string>
+    <string name="apps_loading">Memuat aplikasi…</string>
+    <string name="back">Kembali</string>
+</resources>

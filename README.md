@@ -29,6 +29,7 @@ INGRES_ADDONS_ROM := los      # atau aospa
 JamesDSP **mati bawaan** sejak 26 Nov 2026 (bentrok dengan suara video Dolby Vision); nyalakan dengan `INGRES_ADDONS_JAMESDSP := true`.
 
 Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT / _PERF := false`.
+`INGRES_ADDONS_PARTS` (Ingres Parts) mati bawaan, lihat bagian di bawah.
 
 ## LED
 
@@ -72,6 +73,38 @@ disembunyikan bila daftar frekuensi tak terbaca oleh app.
 Modul tuning lain yang menulis `scaling_max_freq`/governor berkala (mis. loop `while true; do sleep 5`
 di `service.sh` modul KernelSU) menimpa profil dalam hitungan detik. Matikan bagian CPU modul itu
 selama profil per aplikasi dipakai.
+
+## Ingres Parts (uji coba)
+
+App `IngresParts` (`parts/`) menambah entri **Ingres Parts** di halaman utama Setelan. **Mati bawaan**;
+nyalakan dengan `INGRES_ADDONS_PARTS := true` di `device.mk` dan `BoardConfig.mk` (sebelum include
+addons). Saat ini baru dinyalakan di branch `evox-cnb`.
+
+| Fitur | Node | Catatan |
+|---|---|---|
+| Batas cas (normal / optimal 80% / batas 50–95%) | `qcom-battery/night_charging`, `input_suspend` | lanjut cas lagi 5% di bawah batas |
+| Bypass charging (eksperimen) | `power_supply/battery/constant_charge_current` = 0 | arus asli disimpan dan dipulihkan, juga setelah reboot |
+| Profil thermal (hemat/harian/seimbang/gaming/performa) | `thermal_message/sconfig` (11/0/20/13/10) | seimbang = bawaan ROM (20), tidak ditulis bila tak diubah |
+| Mode game: daftar game, profil thermal game, sentuhan responsif, overlay FPS & suhu | `touch_dev/bump_sample_rate`, `sde-crtc-0/measured_fps` | nilai sentuhan sebelum game dipulihkan |
+| Mode warna Flat | `disp-DSI-0/disp_param` = `6 1` | ditulis ulang saat layar menyala (DC dimming tidak didukung panel) |
+| Pembersih speaker | nada 165 Hz 30 detik ke speaker bawaan | volume dikembalikan setelahnya |
+| Pintasan | LED, CPU/GPU per Aplikasi, GameKeys, Dolby | hanya yang terpasang |
+
+- Alur sama dengan Perf: app mengisi `sys.ingres.parts.*`, `init` (`parts/init/init.ingres_parts.rc`)
+  menulis sysfs. Flat memakai pemicu `sys.ingres.parts.flat_apply` (nonce) supaya bisa ditulis ulang.
+- SELinux: `sepolicy/parts-private` (+`-a17`) untuk properti dan `sysfs_thermal`; `sepolicy/parts-vendor`
+  (+`-a17`) untuk node baterai/sentuh/layar/FPS, dipasang otomatis bila keempat tipenya ada di source.
+- Logika murni di `parts/app/java` diuji di host:
+  `javac -d out $(find app/java app/test -name "*.java") && java -cp out org.ingres.parts.logic.HostTests`
+- Modul KernelSU yang menulis `sconfig` (mis. DThermal) menimpa profil thermal; matikan salah satunya.
+
+Titik periksa di HP, terminal root:
+
+```
+getprop | grep ingres.parts
+cat /sys/class/qcom-battery/input_suspend /sys/devices/virtual/thermal/thermal_message/sconfig
+dmesg | grep avc | grep -e ingres -e init
+```
 
 ## Debloat
 

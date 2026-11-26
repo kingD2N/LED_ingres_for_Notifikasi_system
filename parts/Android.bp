@@ -1,0 +1,13 @@
+//
+// SPDX-FileCopyrightText: 2026 kingD2N
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Init rc Ingres Parts: menulis sysfs baterai, thermal, sentuh, dan layar saat app
+// IngresParts mengubah properti sys.ingres.parts.*. Diinstal ke /system_ext/etc/init.
+prebuilt_etc {
+    name: "init.ingres_parts.rc",
+    src: "init/init.ingres_parts.rc",
+    system_ext_specific: true,
+    sub_dir: "init",
+}
