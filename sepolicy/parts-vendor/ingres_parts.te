@@ -1,18 +1,18 @@
-# rc Ingres Parts (system_ext) berjalan di domain init dan menulis node vendor:
+# rc Ingres Parts (system_ext) berjalan di domain init dan menulis node vendor. Aturan dipecah
+# per tipe (parts-vendor-*) karena label tiap ROM berbeda; BoardConfigAddons.mk hanya memasang
+# folder yang tipenya ada di source (aturan dengan tipe yang tidak ada merusak build).
+#
+# Folder ini (tipe dari device/qcom/sepolicy_vndr, ada di LineageOS dan AOSPA):
 #   qcom-battery/input_suspend, night_charging, battery/constant_charge_current
 #     -> vendor_sysfs_battery_supply
-#   touch_dev/bump_sample_rate -> vendor_sysfs_touch
-#   mi_display/disp_feature/disp-DSI-0/disp_param -> vendor_sysfs_displayfeature
-# Label dicek di ingres lewat ls -Z. Dipasang hanya bila semua tipenya ada di source
-# (lihat INGRES_ADDONS_PARTS_TYPES di BoardConfigAddons.mk).
+#   mi_display/disp_feature/disp-DSI-0/disp_param -> vendor_sysfs_graphics di AOSPA
+#   sde-crtc-0/measured_fps (dibaca app untuk overlay FPS) -> vendor_sysfs_graphics
 allow init vendor_sysfs_battery_supply:dir r_dir_perms;
 allow init vendor_sysfs_battery_supply:file w_file_perms;
 allow init vendor_sysfs_battery_supply:lnk_file r_file_perms;
-allow init vendor_sysfs_touch:file w_file_perms;
-allow init vendor_sysfs_displayfeature:dir r_dir_perms;
-allow init vendor_sysfs_displayfeature:file w_file_perms;
+allow init vendor_sysfs_graphics:dir r_dir_perms;
+allow init vendor_sysfs_graphics:file w_file_perms;
 
-# App IngresParts membaca sde-crtc-0/measured_fps (vendor_sysfs_graphics) untuk overlay FPS.
 allow platform_app vendor_sysfs_graphics:dir r_dir_perms;
 allow platform_app vendor_sysfs_graphics:file r_file_perms;
 allow platform_app vendor_sysfs_graphics:lnk_file r_file_perms;

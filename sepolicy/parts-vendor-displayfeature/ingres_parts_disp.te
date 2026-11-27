@@ -1,0 +1,4 @@
+# LineageOS sm8450-common: mi_display/disp_feature/disp-DSI-0/disp_param (mode Flat)
+# -> vendor_sysfs_displayfeature (tipe ini tidak ada di AOSPA).
+allow init vendor_sysfs_displayfeature:dir r_dir_perms;
+allow init vendor_sysfs_displayfeature:file w_file_perms;

@@ -93,8 +93,10 @@ addons). Saat ini baru dinyalakan di branch `evox-cnb`.
 
 - Alur sama dengan Perf: app mengisi `sys.ingres.parts.*`, `init` (`parts/init/init.ingres_parts.rc`)
   menulis sysfs. Flat memakai pemicu `sys.ingres.parts.flat_apply` (nonce) supaya bisa ditulis ulang.
-- SELinux: `sepolicy/parts-private` (+`-a17`) untuk properti dan `sysfs_thermal`; `sepolicy/parts-vendor`
-  (+`-a17`) untuk node baterai/sentuh/layar/FPS, dipasang otomatis bila keempat tipenya ada di source.
+- SELinux: `sepolicy/parts-private` (+`-a17`) untuk properti dan `sysfs_thermal`. Node vendor dipecah per
+  tipe karena labelnya beda per ROM, tiap folder dipasang hanya bila tipenya ada di source:
+  `parts-vendor` (baterai + `vendor_sysfs_graphics`: FPS, dan `disp_param` di AOSPA), `parts-vendor-touch`,
+  `parts-vendor-displayfeature` (`disp_param` di LineageOS), `parts-vendor-aospa` (label `bump_sample_rate`).
 - Logika murni di `parts/app/java` diuji di host:
   `javac -d out $(find app/java app/test -name "*.java") && java -cp out org.ingres.parts.logic.HostTests`
 - Satu pintu: selama Ingres Parts terpasang, ikon LEDs, entri Setelan > Sistem > CPU/GPU per Aplikasi,
