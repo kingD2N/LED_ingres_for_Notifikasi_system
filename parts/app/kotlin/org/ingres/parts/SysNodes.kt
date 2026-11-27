@@ -26,11 +26,13 @@ object SysNodes {
     /** Pemicu tulis ulang mode Flat (init hanya terpicu bila nilai properti berubah). */
     const val PROP_FLAT_APPLY = "sys.ingres.parts.flat_apply"
 
-    const val NODE_FCC = "/sys/class/power_supply/battery/constant_charge_current"
     const val NODE_FPS = "/sys/class/drm/sde-crtc-0/measured_fps"
 
-    /** Arus cas bawaan ingres (HyperCharge 120W) bila nilai asli tidak bisa dibaca. */
-    const val FCC_FALLBACK_UA = 5_850_000
+    /**
+     * Nilai FCC yang melepas batas arus cas: qti_battery_charger mengirim nilai negatif ke ADSP
+     * sebagai UINT_MAX (tanpa batas dari kernel), ADSP kembali ke step/JEITA/thermal-nya sendiri.
+     */
+    const val FCC_RELEASE = "-1"
 
     /** true bila properti berhasil diisi. */
     fun setProp(key: String, value: String): Boolean =

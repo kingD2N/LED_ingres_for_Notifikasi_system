@@ -45,10 +45,9 @@ class PartsController(private val ctx: Context) {
     /** Dipanggil sekali saat proses mulai. */
     fun start() {
         // Bypass yang belum dikembalikan (app atau HP mati saat bypass): pulihkan arus cas dulu.
-        val pending = prefs.pendingFccRestore
-        if (pending > 0) {
-            Log.w(TAG, "Memulihkan arus cas $pending setelah bypass terputus")
-            if (write(SysNodes.PROP_FCC, pending.toString(), force = true)) prefs.pendingFccRestore = 0
+        if (prefs.pendingFccRestore > 0) {
+            Log.w(TAG, "Melepas batas arus cas setelah bypass terputus")
+            if (write(SysNodes.PROP_FCC, SysNodes.FCC_RELEASE, force = true)) prefs.pendingFccRestore = 0
         }
         applyAll()
     }
@@ -113,16 +112,19 @@ class PartsController(private val ctx: Context) {
         write(SysNodes.PROP_INPUT_SUSPEND, if (next.suspendInput) "1" else "0")
     }
 
+    /**
+     * Bypass: arus cas baterai (FCC) 0, HP berjalan dari charger. ingres memakai qti_battery_charger
+     * yang meneruskan nilai ke ADSP sebagai batas tetap, jadi saat selesai FCC TIDAK diisi angka
+     * (itu membatasi cas berikutnya), melainkan dilepas dengan nilai negatif (UINT_MAX di ADSP).
+     */
     private fun applyBypass(active: Boolean) {
-        val pending = prefs.pendingFccRestore
-        if (active && pending <= 0) {
-            val original =
-                SysNodes.read(SysNodes.NODE_FCC)?.toIntOrNull()?.takeIf { it > 0 } ?: SysNodes.FCC_FALLBACK_UA
-            // Simpan dulu (commit) supaya arus cas bisa dipulihkan walau proses mati sesudahnya.
-            prefs.pendingFccRestore = original
+        val pending = prefs.pendingFccRestore > 0
+        if (active && !pending) {
+            // Tandai dulu (commit) supaya batas bisa dilepas walau proses mati sesudahnya.
+            prefs.pendingFccRestore = 1
             write(SysNodes.PROP_FCC, "0", force = true)
-        } else if (!active && pending > 0) {
-            if (write(SysNodes.PROP_FCC, pending.toString(), force = true)) prefs.pendingFccRestore = 0
+        } else if (!active && pending) {
+            if (write(SysNodes.PROP_FCC, SysNodes.FCC_RELEASE, force = true)) prefs.pendingFccRestore = 0
         }
     }
 

@@ -72,8 +72,8 @@ class PartsPrefs(context: Context) {
         set(v) = prefs.edit().putBoolean(K_FLAT, v).apply()
 
     /**
-     * Arus cas asli yang disimpan sebelum bypass menulis 0. Bila ada (>0), bypass belum
-     * dikembalikan: dipakai untuk memulihkan arus cas setelah app atau HP mulai ulang.
+     * >0 selama bypass menahan arus cas (FCC 0) dan belum dilepas: dipakai untuk melepas batas
+     * arus setelah app atau HP mulai ulang. (Versi lama menyimpan angka arus di sini.)
      */
     var pendingFccRestore: Int
         get() = prefs.getInt(K_FCC_RESTORE, 0)
