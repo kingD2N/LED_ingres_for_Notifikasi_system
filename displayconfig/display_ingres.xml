@@ -49,7 +49,9 @@
             </point>
         </sdrHdrRatioMap>
     </highBrightnessMode>
-    <ambientLightHorizonLong>3000</ambientLightHorizonLong>
-    <ambientLightHorizonShort>1000</ambientLightHorizonShort>
+    <!-- ingres: ambientLightHorizonLong/Short (3000/1000 ms dari MIUI) sengaja dihapus.
+         Di AOSP jendela panjang harus lebih lama dari config_autoBrightnessDarkeningLightDebounce
+         (5000 ms di overlay ingres); dengan 3000 ms kecerahan adaptif tidak pernah turun lagi
+         setelah terang. Tanpa tag ini AOSP memakai bawaan 10000/2000 ms. -->
 </displayConfiguration>
 <!-- END Adapt_MIUIAdaptFrame -->

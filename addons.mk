@@ -103,6 +103,7 @@ endif
 # Blob vendor menamainya display_id_...170 (ID layar di ROM stock), tetapi di ROM custom
 # ID layar ingres ...169 (port 129), sehingga file tidak terbaca dan video HDR tidak
 # otomatis terang. Dipasang juga dengan ID/port yang dipakai ROM custom (diuji 25/11/2026).
+# Tanpa ambientLightHorizon MIUI (27/11/2026): kecerahan adaptif tidak bisa turun lagi.
 ifeq ($(INGRES_ADDONS_HDR),true)
 PRODUCT_COPY_FILES += \
     $(INGRES_ADDONS_PATH)/displayconfig/display_ingres.xml:$(TARGET_COPY_OUT_VENDOR)/etc/displayconfig/display_id_4630946545580055169.xml \
