@@ -85,7 +85,7 @@ addons). Saat ini baru dinyalakan di branch `evox-cnb`.
 | Batas cas (normal / optimal 80% / batas 50–95%) | `qcom-battery/night_charging`, `input_suspend` | lanjut cas lagi 5% di bawah batas |
 | Bypass charging (eksperimen) | `power_supply/battery/constant_charge_current` = 0 | arus asli disimpan dan dipulihkan, juga setelah reboot |
 | Profil thermal (hemat/harian/seimbang/gaming/performa) | `thermal_message/sconfig` (11/0/20/13/10) | seimbang = bawaan ROM (20), tidak ditulis bila tak diubah |
-| Mode game: daftar game, profil thermal game, sentuhan responsif, overlay FPS & suhu | `touch_dev/bump_sample_rate`, `sde-crtc-0/measured_fps` | nilai sentuhan sebelum game dipulihkan |
+| Mode game: daftar game, profil thermal game, sentuhan responsif, overlay FPS & suhu | `touch_dev/bump_sample_rate`, `sde-crtc-0/measured_fps` | setelah game kembali sesuai "High touch polling rate" di Setelan |
 | Mode warna Flat | `disp-DSI-0/disp_param` = `6 1` | ditulis ulang saat layar menyala (DC dimming tidak didukung panel) |
 | Pembersih speaker | nada 165 Hz 30 detik ke speaker bawaan | volume dikembalikan setelahnya |
 | Fitur lain | LED, CPU/GPU per Aplikasi, Dolby | hanya yang terpasang (GameKeys tidak punya halaman setelan) |

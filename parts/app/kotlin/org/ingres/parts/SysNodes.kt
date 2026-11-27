@@ -5,6 +5,8 @@
 
 package org.ingres.parts
 
+import android.content.Context
+import android.net.Uri
 import android.os.SystemProperties
 import android.util.Log
 import java.io.File
@@ -41,6 +43,21 @@ object SysNodes {
         } catch (e: Exception) {
             Log.e(TAG, "Gagal mengisi $key=$value", e)
             false
+        }
+
+    /**
+     * Setelan LineageOS "High touch polling rate" (Setelan > Layar): "1"/"0", atau null bila ROM
+     * tidak punya. Node bump_sample_rate tidak bisa dibaca (EINVAL), jadi setelah game nilainya
+     * dikembalikan menurut setelan ini.
+     */
+    fun lineageHighTouchPolling(ctx: Context): String? =
+        try {
+            ctx.contentResolver
+                .call(Uri.parse("content://lineagesettings"), "GET_system", "high_touch_polling_rate_enable", null)
+                ?.getString("value")
+                ?.takeIf { it == "0" || it == "1" }
+        } catch (e: Exception) {
+            null
         }
 
     /** Isi node (dipangkas), null bila tidak bisa dibaca. */

@@ -144,8 +144,10 @@ class PartsController(private val ctx: Context) {
             savedTouch = SysNodes.read(SysNodes.NODE_TOUCH_BOOST)?.takeIf { it == "0" || it == "1" }
             touchBoosted = write(SysNodes.PROP_TOUCH_BOOST, "1", force = true)
         } else if (!want && touchBoosted) {
-            // Kembalikan nilai sebelum game (mis. "Laju polling sentuh tinggi" di Setelan).
-            write(SysNodes.PROP_TOUCH_BOOST, savedTouch ?: "0", force = true)
+            // Kembalikan sesuai "High touch polling rate" di Setelan (LineageOS), atau nilai node
+            // sebelum game bila terbaca, atau mati.
+            val restore = SysNodes.lineageHighTouchPolling(ctx) ?: savedTouch ?: "0"
+            write(SysNodes.PROP_TOUCH_BOOST, restore, force = true)
             touchBoosted = false
             savedTouch = null
         }
