@@ -1,4 +1,0 @@
-# Android 17: app IngresParts (sertifikat platform, target SDK < 37) berjalan sebagai
-# platform_app_36, bukan platform_app. Hanya dipasang di Android 17
-# (lihat INGRES_ADDONS_A17 di BoardConfigAddons.mk).
-set_prop(platform_app_36, ingres_parts_prop)

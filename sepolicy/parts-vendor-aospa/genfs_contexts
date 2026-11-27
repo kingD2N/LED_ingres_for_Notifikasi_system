@@ -1,3 +1,0 @@
-# AOSPA sm8450-common (calcite) tidak memberi label bump_sample_rate (jatuh ke "sysfs" umum,
-# yang tidak boleh ditulis init). Beri label vendor_sysfs_touch seperti di LineageOS.
-genfscon sysfs /devices/virtual/touch/touch_dev/bump_sample_rate u:object_r:vendor_sysfs_touch:s0

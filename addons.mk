@@ -43,19 +43,17 @@ PRODUCT_PACKAGES += \
     vendor.lineage.leds-service.ingres
 endif
 
-# Perf: kontrol CPU/GPU per aplikasi (app IngresPerf + init rc penulis sysfs)
-ifeq ($(INGRES_ADDONS_PERF),true)
-PRODUCT_PACKAGES += \
-    IngresPerf \
-    init.ingres_perf.rc
+# Ingres Parts + CPU/GPU per Aplikasi: dari repo kingD2N/Ingres_Parts di packages/apps/IngresParts
+# (lihat local manifest), satu sumber untuk semua ROM. Ingres Parts mati bawaan; nyalakan dengan
+# INGRES_ADDONS_PARTS := true di device.mk (sebelum inherit sm8450-common) dan BoardConfig.mk.
+ifneq ($(filter true,$(INGRES_ADDONS_PARTS) $(INGRES_ADDONS_PERF)),)
+INGRES_PARTS_APP := $(INGRES_ADDONS_PARTS)
+INGRES_PARTS_PERF := $(INGRES_ADDONS_PERF)
+ifneq ($(wildcard packages/apps/IngresParts/ingres_parts.mk),)
+$(call inherit-product, packages/apps/IngresParts/ingres_parts.mk)
+else
+$(warning ingres addons: packages/apps/IngresParts tidak ada (tambahkan kingD2N/Ingres_Parts ke local manifest), Ingres Parts dan CPU/GPU per Aplikasi dilewati)
 endif
-
-# Parts: pengaturan ingres (batas cas, bypass, profil thermal, mode game, Flat, pembersih speaker).
-# Masih uji coba, mati bawaan. Nyalakan dengan INGRES_ADDONS_PARTS := true di device.mk dan BoardConfig.mk.
-ifeq ($(INGRES_ADDONS_PARTS),true)
-PRODUCT_PACKAGES += \
-    IngresParts \
-    init.ingres_parts.rc
 endif
 
 # Dolby Lunaris

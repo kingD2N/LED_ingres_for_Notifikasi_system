@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-     SPDX-FileCopyrightText: 2026 kingD2N
-     SPDX-License-Identifier: Apache-2.0
--->
-<resources>
-    <!-- Jendela dasar saja; warna UI dari tema Compose (PartsTheme). -->
-    <style name="Theme.IngresParts" parent="android:Theme.Material.Light.NoActionBar" />
-</resources>

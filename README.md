@@ -29,7 +29,7 @@ INGRES_ADDONS_ROM := los      # atau aospa
 JamesDSP **mati bawaan** sejak 26 Nov 2026 (bentrok dengan suara video Dolby Vision); nyalakan dengan `INGRES_ADDONS_JAMESDSP := true`.
 
 Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUICAMERA / _DEBLOAT / _PERF := false`.
-`INGRES_ADDONS_PARTS` (Ingres Parts) mati bawaan, lihat bagian di bawah.
+`INGRES_ADDONS_PARTS` (Ingres Parts) mati bawaan, lihat bagian Ingres Parts di bawah.
 
 ## LED
 
@@ -40,78 +40,18 @@ Matikan satu paket: `INGRES_ADDONS_GAMEKEYS / _LEDS / _DOLBY / _JAMESDSP / _MIUI
   notifikasi saat layar mati = efek 2. Bisa dimatikan dari app Leds ("Lampu status").
   Efek pilihan di app dipasang lagi setelah lampu status selesai.
 
-## CPU/GPU per aplikasi
+## Ingres Parts dan CPU/GPU per Aplikasi
 
-App `IngresPerf` (`perf/`) menambah entri **CPU/GPU per Aplikasi** di Setelan > Sistem: frekuensi
-min/max tiap cluster CPU (little/big/prime), governor CPU, dan min/max GPU, per aplikasi. Entri
-**Default** dipakai setelah boot dan saat aplikasi di depan tidak punya profil. Profil tersimpan
-permanen (storage device-protected), ada sakelar utama dan "Reset semua".
+Keduanya diambil dari repo [kingD2N/Ingres_Parts](https://github.com/kingD2N/Ingres_Parts) di
+`packages/apps/IngresParts` (local manifest tiap ROM), satu sumber yang sama dengan yang dibagikan
+ke teman. Panduan, fitur, SELinux, dan cara cek ada di README repo itu.
 
-- Alur: app menyimpan profil, lalu mengisi property `sys.ingres.perf.*` dan terakhir
-  `sys.ingres.perf.apply`; `init` (`perf/init/init.ingres_perf.rc`) yang menulis node sysfs.
-- Hanya field yang diatur profil yang ditulis (kolom kosong dilewati, `init` mencatat error
-  harmless di kmsg). Nilai hanya dari daftar kernel; urutan tulis governor, lantai, max, min.
-- Nilai dasar (snapshot) diambil sebelum profil diterapkan dan dipulihkan saat keluar.
-  Default diterapkan ~20 detik setelah boot selesai (menghindari tabrakan skrip boot vendor).
-- Matikan: `INGRES_ADDONS_PERF := false` di `device.mk`. Hapus semua profil lewat "Reset semua".
-- Penyimpanan memakai SharedPreferences device-protected (bukan DataStore).
-
-Titik periksa di HP (setelah build pertama), terminal root:
-
-```
-setprop sys.ingres.perf.cpu0_max <nilai valid>; setprop sys.ingres.perf.apply 1
-cat /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
-dmesg | grep avc | grep -e init -e perf
-ls -Z /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq /sys/class/kgsl/kgsl-3d0/devfreq/max_freq
-```
-
-Bila `init` ditolak SELinux (avc), minta rencana cadangan (daemon native seperti HAL LED).
-GPU: label node kgsl di ingres adalah `vendor_sysfs_kgsl`; aturan tulis untuk `init` ada di
-`sepolicy/perf-vendor` dan dipasang otomatis bila tipenya ada di source. Bagian GPU di UI
-disembunyikan bila daftar frekuensi tak terbaca oleh app.
-
-Modul tuning lain yang menulis `scaling_max_freq`/governor berkala (mis. loop `while true; do sleep 5`
-di `service.sh` modul KernelSU) menimpa profil dalam hitungan detik. Matikan bagian CPU modul itu
-selama profil per aplikasi dipakai.
-
-## Ingres Parts (uji coba)
-
-App `IngresParts` (`parts/`) menambah entri **Ingres Parts** di halaman utama Setelan. **Mati bawaan**;
-nyalakan dengan `INGRES_ADDONS_PARTS := true` di `device.mk` dan `BoardConfig.mk` (sebelum include
-addons). Saat ini baru dinyalakan di branch `evox-cnb`.
-
-| Fitur | Node | Catatan |
-|---|---|---|
-| Batas cas (normal / optimal 80% / batas 50–95%) | `qcom-battery/night_charging`, `input_suspend` | lanjut cas lagi 5% di bawah batas |
-| Bypass charging (eksperimen) | `power_supply/battery/constant_charge_current` = 0 | dilepas dengan `-1` (qti_battery_charger: UINT_MAX ke ADSP), bukan angka arus yang akan jadi batas tetap; juga setelah reboot |
-| Profil thermal (hemat/harian/seimbang/gaming/performa) | `thermal_message/sconfig` (11/0/20/13/10) | seimbang = bawaan ROM (20), tidak ditulis bila tak diubah |
-| Mode game: daftar game, profil thermal game, sentuhan 480 Hz, overlay FPS & suhu | `touch_dev/bump_sample_rate` (1 = 480 Hz, 0 = 240 Hz, driver Goodix), `sde-crtc-0/measured_fps` | di luar game 240 Hz |
-| Sentuhan 480 Hz di semua aplikasi | `touch_dev/bump_sample_rate` | pengganti "High touch polling rate" Setelan: sakelar itu dihilangkan (sm8450-common, `INGRES_ADDONS_PARTS`) |
-| Mode warna Flat | `disp-DSI-0/disp_param` = `6 1` | ditulis ulang saat layar menyala (DC dimming tidak didukung panel) |
-| Pembersih speaker | nada 165 Hz 30 detik ke speaker bawaan | volume dikembalikan setelahnya |
-| Fitur lain | LED, CPU/GPU per Aplikasi, Dolby | hanya yang terpasang (GameKeys tidak punya halaman setelan) |
-
-- Alur sama dengan Perf: app mengisi `sys.ingres.parts.*`, `init` (`parts/init/init.ingres_parts.rc`)
-  menulis sysfs. Flat memakai pemicu `sys.ingres.parts.flat_apply` (nonce) supaya bisa ditulis ulang.
-- SELinux: `sepolicy/parts-private` (+`-a17`) untuk properti dan `sysfs_thermal`. Node vendor dipecah per
-  tipe karena labelnya beda per ROM, tiap folder dipasang hanya bila tipenya ada di source:
-  `parts-vendor` (baterai + `vendor_sysfs_graphics`: FPS, dan `disp_param` di AOSPA), `parts-vendor-touch`,
-  `parts-vendor-displayfeature` (`disp_param` di LineageOS), `parts-vendor-aospa` (label `bump_sample_rate`).
-- Logika murni di `parts/app/java` diuji di host:
-  `javac -d out $(find app/java app/test -name "*.java") && java -cp out org.ingres.parts.logic.HostTests`
-- Satu pintu: selama Ingres Parts terpasang, ikon LEDs, entri Setelan > Sistem > CPU/GPU per Aplikasi,
-  serta entri Setelan > Suara dan ikon Dolby dimatikan (`EntryPoints.kt`). Ketiganya kini activity-alias
-  (`.LauncherEntry` / `.SettingsEntry`); activity aslinya dibuka dari menu Ingres Parts. Tile Quick Settings
-  Dolby dan tombol equalizer aplikasi musik tetap jalan. ROM tanpa Ingres Parts tidak berubah.
-- Modul KernelSU yang menulis `sconfig` (mis. DThermal) menimpa profil thermal; matikan salah satunya.
-
-Titik periksa di HP, terminal root:
-
-```
-getprop | grep ingres.parts
-cat /sys/class/qcom-battery/input_suspend /sys/devices/virtual/thermal/thermal_message/sconfig
-dmesg | grep avc | grep -e ingres -e init
-```
+- `INGRES_ADDONS_PERF` (bawaan `true`): CPU/GPU per Aplikasi.
+- `INGRES_ADDONS_PARTS` (bawaan `false`): aplikasi Ingres Parts. Nyalakan di `device.mk` **sebelum**
+  inherit sm8450-common (sakelar High touch polling rate di Setelan ikut dihilangkan) dan di `BoardConfig.mk`.
+- addons.mk / BoardConfigAddons.mk meneruskan keduanya ke `ingres_parts.mk` / `BoardConfigParts.mk`
+  sebagai `INGRES_PARTS_APP` / `INGRES_PARTS_PERF`. Bila `packages/apps/IngresParts` tidak ada di source,
+  build tetap jalan dengan peringatan `ingres addons: packages/apps/IngresParts tidak ada`.
 
 ## Debloat
 

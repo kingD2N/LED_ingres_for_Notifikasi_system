@@ -1,3 +1,0 @@
-# touch_dev/bump_sample_rate (sampling sentuh 480/240 Hz) -> vendor_sysfs_touch
-# (LineageOS: genfs sm8450-common; AOSPA: genfs di parts-vendor-aospa).
-allow init vendor_sysfs_touch:file w_file_perms;
