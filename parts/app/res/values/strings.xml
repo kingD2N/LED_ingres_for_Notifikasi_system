@@ -42,16 +42,17 @@
     <string name="game_thermal">Thermal while gaming</string>
     <string name="game_thermal_follow">Same as thermal profile</string>
     <string name="game_touch">Touch 480 Hz in games</string>
-    <string name="game_touch_desc">Games in the list use 480 Hz touch sampling, everything else 240 Hz to save battery and heat</string>
-    <string name="game_touch_warn">\"High touch polling rate\" in Settings &gt; Display is on, so touch stays at 480 Hz outside games too. Turn it off to get 240 Hz outside games.</string>
+    <string name="game_touch_desc">Games in the list use 480 Hz touch sampling. Outside games 240 Hz, unless \"Touch 480 Hz in all apps\" is on</string>
     <string name="game_overlay">FPS &amp; temperature overlay</string>
     <string name="game_overlay_desc">Shows FPS, CPU and battery temperature while a game is open</string>
     <string name="overlay_preview">Preview</string>
     <string name="overlay_hide">Hide</string>
 
-    <string name="section_display">Display</string>
+    <string name="section_display">Display &amp; touch</string>
     <string name="flat_title">Flat color mode (experimental)</string>
     <string name="flat_desc">Flat panel gamma for more accurate colors</string>
+    <string name="touch_always_title">Touch 480 Hz in all apps</string>
+    <string name="touch_always_desc">High touch polling rate. More responsive everywhere, but uses more battery and runs warmer. Off = 240 Hz outside games</string>
 
     <string name="section_speaker">Speaker</string>
     <string name="clean_title">Clean speaker</string>

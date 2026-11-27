@@ -41,16 +41,17 @@
     <string name="game_thermal">Thermal saat main game</string>
     <string name="game_thermal_follow">Sama dengan profil thermal</string>
     <string name="game_touch">Sentuhan 480 Hz saat main game</string>
-    <string name="game_touch_desc">Game di daftar memakai sampling sentuh 480 Hz, selain itu 240 Hz supaya hemat baterai dan tidak panas</string>
-    <string name="game_touch_warn">\"High touch polling rate\" di Setelan &gt; Layar sedang aktif, jadi di luar game sentuhan tetap 480 Hz. Matikan supaya di luar game 240 Hz.</string>
+    <string name="game_touch_desc">Game di daftar memakai sampling sentuh 480 Hz. Di luar game 240 Hz, kecuali \"Sentuhan 480 Hz di semua aplikasi\" aktif</string>
     <string name="game_overlay">Overlay FPS &amp; suhu</string>
     <string name="game_overlay_desc">Menampilkan FPS, suhu CPU, dan suhu baterai saat game dibuka</string>
     <string name="overlay_preview">Coba tampilkan</string>
     <string name="overlay_hide">Sembunyikan</string>
 
-    <string name="section_display">Layar</string>
+    <string name="section_display">Layar &amp; sentuhan</string>
     <string name="flat_title">Mode warna Flat (eksperimen)</string>
     <string name="flat_desc">Gamma panel flat untuk warna lebih akurat</string>
+    <string name="touch_always_title">Sentuhan 480 Hz di semua aplikasi</string>
+    <string name="touch_always_desc">High touch polling rate. Lebih responsif di mana saja, tapi lebih boros baterai dan lebih hangat. Mati = 240 Hz di luar game</string>
 
     <string name="section_speaker">Speaker</string>
     <string name="clean_title">Bersihkan speaker</string>

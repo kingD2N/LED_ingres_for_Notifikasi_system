@@ -85,7 +85,8 @@ addons). Saat ini baru dinyalakan di branch `evox-cnb`.
 | Batas cas (normal / optimal 80% / batas 50–95%) | `qcom-battery/night_charging`, `input_suspend` | lanjut cas lagi 5% di bawah batas |
 | Bypass charging (eksperimen) | `power_supply/battery/constant_charge_current` = 0 | arus asli disimpan dan dipulihkan, juga setelah reboot |
 | Profil thermal (hemat/harian/seimbang/gaming/performa) | `thermal_message/sconfig` (11/0/20/13/10) | seimbang = bawaan ROM (20), tidak ditulis bila tak diubah |
-| Mode game: daftar game, profil thermal game, sentuhan 480 Hz (di luar game 240 Hz, driver Goodix), overlay FPS & suhu | `touch_dev/bump_sample_rate`, `sde-crtc-0/measured_fps` | setelah game kembali sesuai "High touch polling rate" di Setelan |
+| Mode game: daftar game, profil thermal game, sentuhan 480 Hz, overlay FPS & suhu | `touch_dev/bump_sample_rate` (1 = 480 Hz, 0 = 240 Hz, driver Goodix), `sde-crtc-0/measured_fps` | di luar game 240 Hz |
+| Sentuhan 480 Hz di semua aplikasi | `touch_dev/bump_sample_rate` | pengganti "High touch polling rate" Setelan: sakelar itu dihilangkan (sm8450-common, `INGRES_ADDONS_PARTS`) |
 | Mode warna Flat | `disp-DSI-0/disp_param` = `6 1` | ditulis ulang saat layar menyala (DC dimming tidak didukung panel) |
 | Pembersih speaker | nada 165 Hz 30 detik ke speaker bawaan | volume dikembalikan setelahnya |
 | Fitur lain | LED, CPU/GPU per Aplikasi, Dolby | hanya yang terpasang (GameKeys tidak punya halaman setelan) |

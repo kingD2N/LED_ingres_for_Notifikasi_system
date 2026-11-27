@@ -41,8 +41,6 @@ class PartsController(private val ctx: Context) {
         private set
 
     private var flatNonce = 0
-    private var savedTouch: String? = null
-    private var touchBoosted = false
 
     /** Dipanggil sekali saat proses mulai. */
     fun start() {
@@ -138,19 +136,15 @@ class PartsController(private val ctx: Context) {
         write(SysNodes.PROP_SCONFIG, value)
     }
 
+    /**
+     * Sampling sentuh (driver Goodix ingres): bump_sample_rate 1 = 480 Hz, 0 = 240 Hz. Node tidak
+     * bisa dibaca, jadi nilainya ditentukan penuh dari setelan Ingres Parts: 480 Hz di semua aplikasi,
+     * atau hanya saat game di daftar dibuka. Sakelar "High touch polling rate" di Setelan
+     * dihilangkan (sm8450-common) selama Ingres Parts terpasang, supaya tidak bentrok.
+     */
     private fun applyTouch() {
-        val want = gameActive && prefs.gameTouch
-        if (want && !touchBoosted) {
-            savedTouch = SysNodes.read(SysNodes.NODE_TOUCH_BOOST)?.takeIf { it == "0" || it == "1" }
-            touchBoosted = write(SysNodes.PROP_TOUCH_BOOST, "1", force = true)
-        } else if (!want && touchBoosted) {
-            // Kembalikan sesuai "High touch polling rate" di Setelan (LineageOS), atau nilai node
-            // sebelum game bila terbaca, atau mati.
-            val restore = SysNodes.lineageHighTouchPolling(ctx) ?: savedTouch ?: "0"
-            write(SysNodes.PROP_TOUCH_BOOST, restore, force = true)
-            touchBoosted = false
-            savedTouch = null
-        }
+        val high = prefs.touchAlways || (gameActive && prefs.gameTouch)
+        write(SysNodes.PROP_TOUCH_BOOST, if (high) "1" else "0")
     }
 
     private fun applyOverlay() {

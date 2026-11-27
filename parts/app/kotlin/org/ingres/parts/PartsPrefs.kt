@@ -58,6 +58,11 @@ class PartsPrefs(context: Context) {
         get() = prefs.getBoolean(K_GAME_TOUCH, true)
         set(v) = prefs.edit().putBoolean(K_GAME_TOUCH, v).apply()
 
+    /** Sentuhan 480 Hz di semua aplikasi (pengganti "High touch polling rate" di Setelan). */
+    var touchAlways: Boolean
+        get() = prefs.getBoolean(K_TOUCH_ALWAYS, false)
+        set(v) = prefs.edit().putBoolean(K_TOUCH_ALWAYS, v).apply()
+
     var gameOverlay: Boolean
         get() = prefs.getBoolean(K_GAME_OVERLAY, false)
         set(v) = prefs.edit().putBoolean(K_GAME_OVERLAY, v).apply()
@@ -86,6 +91,7 @@ class PartsPrefs(context: Context) {
         const val K_GAMES = "games"
         const val K_GAME_TOUCH = "game_touch"
         const val K_GAME_OVERLAY = "game_overlay"
+        const val K_TOUCH_ALWAYS = "touch_always"
         const val K_FLAT = "flat_mode"
         const val K_FCC_RESTORE = "fcc_restore"
     }
