@@ -61,7 +61,6 @@
     <string name="section_more">More features</string>
     <string name="link_leds">LED lights</string>
     <string name="link_perf">CPU/GPU per app</string>
-    <string name="link_gamekeys">Shoulder triggers</string>
     <string name="link_dolby">Dolby Atmos</string>
 
     <string name="picker_title">Choose games</string>

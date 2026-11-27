@@ -88,7 +88,7 @@ addons). Saat ini baru dinyalakan di branch `evox-cnb`.
 | Mode game: daftar game, profil thermal game, sentuhan responsif, overlay FPS & suhu | `touch_dev/bump_sample_rate`, `sde-crtc-0/measured_fps` | nilai sentuhan sebelum game dipulihkan |
 | Mode warna Flat | `disp-DSI-0/disp_param` = `6 1` | ditulis ulang saat layar menyala (DC dimming tidak didukung panel) |
 | Pembersih speaker | nada 165 Hz 30 detik ke speaker bawaan | volume dikembalikan setelahnya |
-| Pintasan | LED, CPU/GPU per Aplikasi, GameKeys, Dolby | hanya yang terpasang |
+| Fitur lain | LED, CPU/GPU per Aplikasi, Dolby | hanya yang terpasang (GameKeys tidak punya halaman setelan) |
 
 - Alur sama dengan Perf: app mengisi `sys.ingres.parts.*`, `init` (`parts/init/init.ingres_parts.rc`)
   menulis sysfs. Flat memakai pemicu `sys.ingres.parts.flat_apply` (nonce) supaya bisa ditulis ulang.
@@ -96,6 +96,10 @@ addons). Saat ini baru dinyalakan di branch `evox-cnb`.
   (+`-a17`) untuk node baterai/sentuh/layar/FPS, dipasang otomatis bila keempat tipenya ada di source.
 - Logika murni di `parts/app/java` diuji di host:
   `javac -d out $(find app/java app/test -name "*.java") && java -cp out org.ingres.parts.logic.HostTests`
+- Satu pintu: selama Ingres Parts terpasang, ikon LEDs, entri Setelan > Sistem > CPU/GPU per Aplikasi,
+  serta entri Setelan > Suara dan ikon Dolby dimatikan (`EntryPoints.kt`). Ketiganya kini activity-alias
+  (`.LauncherEntry` / `.SettingsEntry`); activity aslinya dibuka dari menu Ingres Parts. Tile Quick Settings
+  Dolby dan tombol equalizer aplikasi musik tetap jalan. ROM tanpa Ingres Parts tidak berubah.
 - Modul KernelSU yang menulis `sconfig` (mis. DThermal) menimpa profil thermal; matikan salah satunya.
 
 Titik periksa di HP, terminal root:

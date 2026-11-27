@@ -16,16 +16,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppTheme">
+        <!-- Dibuka juga dari Ingres Parts (komponen eksplisit), jadi tetap exported. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppTheme">
+            android:theme="@style/Theme.AppTheme" />
+
+        <!-- Ikon peluncur. Disembunyikan oleh Ingres Parts (org.ingres.parts) bila terpasang,
+             karena LED sudah ada di menu Ingres Parts. -->
+        <activity-alias
+            android:name=".LauncherEntry"
+            android:exported="true"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <service
             android:name=".service.StatusLightService"

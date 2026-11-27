@@ -16,13 +16,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.IngresPerf">
 
-        <!-- Dibuka dari Setelan > Sistem saja (tanpa ikon di peluncur). -->
+        <!-- Tanpa ikon di peluncur. Dibuka dari Setelan > Sistem atau dari Ingres Parts
+             (komponen eksplisit), jadi tetap exported. -->
         <activity
             android:name=".ui.PerfActivity"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/perf_settings_title"
-            android:theme="@style/Theme.IngresPerf">
+            android:theme="@style/Theme.IngresPerf" />
+
+        <!-- Entri di Setelan > Sistem. Disembunyikan oleh Ingres Parts (org.ingres.parts) bila
+             terpasang, karena CPU/GPU per Aplikasi sudah ada di menu Ingres Parts. -->
+        <activity-alias
+            android:name=".SettingsEntry"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/perf_settings_title"
+            android:targetActivity=".ui.PerfActivity">
             <intent-filter>
                 <action android:name="com.android.settings.action.EXTRA_SETTINGS" />
             </intent-filter>
@@ -41,7 +51,7 @@
             <meta-data
                 android:name="com.android.settings.order"
                 android:value="-255" />
-        </activity>
+        </activity-alias>
 
         <receiver
             android:name=".receiver.BootCompletedReceiver"

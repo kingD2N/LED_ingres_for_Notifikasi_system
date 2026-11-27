@@ -60,7 +60,6 @@
     <string name="section_more">Fitur lain</string>
     <string name="link_leds">Lampu LED</string>
     <string name="link_perf">CPU/GPU per Aplikasi</string>
-    <string name="link_gamekeys">Tombol bahu</string>
     <string name="link_dolby">Dolby Atmos</string>
 
     <string name="picker_title">Pilih game</string>

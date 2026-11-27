@@ -5,9 +5,6 @@
 
 package org.ingres.parts.ui
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -62,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import org.ingres.parts.EntryPoints
 import org.ingres.parts.PartsApplication
 import org.ingres.parts.PartsController
 import org.ingres.parts.R
@@ -264,14 +262,14 @@ private fun MainScreen(
 
             item {
                 Section(stringResource(R.string.section_more)) {
-                    for (link in LINKS) {
-                        val intent = remember(link.pkg) { launchIntent(context, link.pkg) }
+                    for (feature in EntryPoints.FEATURES) {
+                        val intent = remember(feature.pkg) { EntryPoints.intentFor(context, feature) }
                         if (intent != null) {
-                            ClickRow(stringResource(link.title), null) {
+                            ClickRow(stringResource(feature.title), null) {
                                 try {
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
-                                    Log.w(TAG, "Gagal membuka ${link.pkg}", e)
+                                    Log.w(TAG, "Gagal membuka ${feature.pkg}", e)
                                 }
                             }
                         }
@@ -395,29 +393,6 @@ private fun NotReadyScreen() {
     Box(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), Alignment.Center) {
         Text(stringResource(R.string.not_ready), style = MaterialTheme.typography.bodyLarge)
     }
-}
-
-private class Link(val pkg: String, val title: Int)
-
-private val LINKS =
-    listOf(
-        Link("org.lineageos.leds", R.string.link_leds),
-        Link("org.ingres.perf", R.string.link_perf),
-        Link("org.ingres.gamekeys", R.string.link_gamekeys),
-        Link("org.lunaris.dolby", R.string.link_dolby),
-    )
-
-/** Activity utama aplikasi lain, atau activity Setelan-nya bila tanpa ikon peluncur. */
-private fun launchIntent(context: Context, pkg: String): Intent? {
-    val pm = context.packageManager
-    pm.getLaunchIntentForPackage(pkg)?.let { return it }
-    for (action in listOf("com.android.settings.action.EXTRA_SETTINGS", "com.android.settings.action.IA_SETTINGS")) {
-        val ri =
-            pm.queryIntentActivities(Intent(action).setPackage(pkg), PackageManager.ResolveInfoFlags.of(0L))
-                .firstOrNull()
-        if (ri != null) return Intent(action).setClassName(pkg, ri.activityInfo.name)
-    }
-    return null
 }
 
 private const val TAG = "IngresParts"

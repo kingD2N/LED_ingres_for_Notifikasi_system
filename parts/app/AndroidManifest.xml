@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.DEVICE_POWER" />
     <!-- Volume sementara saat membersihkan speaker. -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Menyembunyikan ikon/entri Setelan ganda milik LED, CPU/GPU per Aplikasi, dan Dolby. -->
+    <uses-permission android:name="android.permission.CHANGE_COMPONENT_ENABLED_STATE" />
 
     <application
         android:name=".PartsApplication"
@@ -44,7 +46,7 @@
                 android:resource="@drawable/ic_parts_tile" />
             <meta-data
                 android:name="com.android.settings.icon_tintable"
-                android:value="false" />
+                android:value="true" />
             <meta-data
                 android:name="com.android.settings.summary"
                 android:resource="@string/settings_summary" />

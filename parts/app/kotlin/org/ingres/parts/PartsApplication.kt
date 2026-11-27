@@ -60,6 +60,9 @@ class PartsApplication : Application() {
         speaker = SpeakerCleaner(this)
         controller.start()
 
+        // LED, CPU/GPU per Aplikasi, dan Dolby dibuka dari menu Ingres Parts saja.
+        hideDuplicates()
+
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), Context.RECEIVER_NOT_EXPORTED)
 
         val watcher =
@@ -90,7 +93,23 @@ class PartsApplication : Application() {
      */
     private fun scheduleBootCompleted() {
         mainHandler.removeCallbacksAndMessages(bootToken)
-        mainHandler.postDelayed({ parts.onBootCompleted() }, bootToken, BOOT_SETTLE_MS)
+        mainHandler.postDelayed(
+            {
+                parts.onBootCompleted()
+                // Ulangi setelah HP dibuka: saat proses mulai (direct boot) aplikasi lain bisa belum terbaca.
+                hideDuplicates()
+            },
+            bootToken,
+            BOOT_SETTLE_MS,
+        )
+    }
+
+    private fun hideDuplicates() {
+        try {
+            EntryPoints.hideDuplicates(this)
+        } catch (e: Exception) {
+            Log.e(TAG, "Gagal merapikan pintu masuk fitur", e)
+        }
     }
 
     private companion object {
