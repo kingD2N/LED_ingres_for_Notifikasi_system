@@ -64,6 +64,7 @@ import org.ingres.parts.PartsApplication
 import org.ingres.parts.PartsController
 import org.ingres.parts.R
 import org.ingres.parts.SpeakerCleaner
+import org.ingres.parts.SysNodes
 import org.ingres.parts.logic.ChargePolicy
 import org.ingres.parts.logic.ThermalProfile
 
@@ -222,6 +223,17 @@ private fun MainScreen(
                     }
                     SwitchRow(stringResource(R.string.game_touch), stringResource(R.string.game_touch_desc), touch) {
                         touch = it; prefs.gameTouch = it; applied()
+                    }
+                    // Driver Goodix ingres: bump_sample_rate 1 = 480 Hz, 0 = 240 Hz. Bila setelan LineageOS
+                    // "High touch polling rate" aktif, di luar game tetap 480 Hz.
+                    val highTouchEverywhere = remember(statusTick) { SysNodes.lineageHighTouchPolling(context) == "1" }
+                    if (touch && highTouchEverywhere) {
+                        Text(
+                            stringResource(R.string.game_touch_warn),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        )
                     }
                     SwitchRow(stringResource(R.string.game_overlay), stringResource(R.string.game_overlay_desc), overlay) {
                         overlay = it; prefs.gameOverlay = it; applied()
